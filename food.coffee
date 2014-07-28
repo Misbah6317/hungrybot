@@ -40,11 +40,23 @@ placeOrder = (params, msg) ->
 module.exports = (robot) ->
   robot.respond /order (.*)/i, (msg) ->
     foodType = encodeURIComponent(msg.match[1])
-    rid = 28759
+    rid = '23844'
+    options =
+      'rid': rid
+      'email': 'sagnew92@gmail.com'
+      'first_name': 'Sam'
+      'last_name': 'Agnew'
+      'phone': '6107616189'
+      'zip': '10010'
+      'addr': '902 Broadway'
+      'city': 'New York'
+      'state': 'NY'
 
     msg.http("http://embarrassme.me:8000/TextSearch?rid=#{rid}&target=#{foodType}")
       .get() (err, res, body) ->
         if err
           msg.send "Encountered an error :( #{err}"
           return
-        msg.send body
+        tray = JSON.parse(body)[1].tray
+        options.tray = "#{tray}"
+        placeOrder(options, msg)
