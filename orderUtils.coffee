@@ -1,5 +1,5 @@
 ordrin = require 'ordrin-api'
-ordrinApi = new ordrin.APIs process.env.ORDRIN_API_KEY, ordrin.TEST
+ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.TEST
 
 placeOrder = (params, msg) ->
   options =
@@ -15,15 +15,15 @@ placeOrder = (params, msg) ->
     'city': params.city
     'state': params.state
     'delivery_date': 'ASAP'
-    'card_name': process.env.CARD_NAME
-    'card_number': process.env.CARD_NUMBER
-    'card_cvc': process.env.CARD_CVC
-    'card_expiry': process.env.CARD_EXPIRY
-    'card_bill_addr': process.env.CARD_BILL_ADDR
-    'card_bill_city': process.env.CARD_BILL_CITY
-    'card_bill_state': process.env.CARD_BILL_STATE
-    'card_bill_zip': process.env.CARD_BILL_ZIP
-    'card_bill_phone': process.env.CARD_BILL_PHONE
+    'card_name': process.env.HUBOT_CARD_NAME
+    'card_number': process.env.HUBOT_CARD_NUMBER
+    'card_cvc': process.env.HUBOT_CARD_CVC
+    'card_expiry': process.env.HUBOT_CARD_EXPIRY
+    'card_bill_addr': process.env.HUBOT_CARD_BILL_ADDR
+    'card_bill_city': process.env.HUBOT_CARD_BILL_CITY
+    'card_bill_state': process.env.HUBOT_CARD_BILL_STATE
+    'card_bill_zip': process.env.HUBOT_CARD_BILL_ZIP
+    'card_bill_phone': process.env.HUBOT_CARD_BILL_PHONE
 
   ordrinApi.order_guest(options, (err, data) ->
     if err
