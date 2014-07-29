@@ -37,7 +37,7 @@ getRelevantMenuItems = (rid, desc, cb) ->
   request "http://embarrassme.me:8000/TextSearch?rid=#{rid}&target=#{desc}&size=5",
     (err, res, body) ->
       if err
-        console.log "Encountered an error :( #{err}"
+        console.log err
         return cb err
 
       cb null, JSON.parse(body)
@@ -55,7 +55,7 @@ getUniqueList = (datetime, addr, city, zip, size, cb) ->
 
       unique_list = []
       cuisines = []
-      
+
       for i in [1..size] by 1
         if(rest_list.length == 0)
           break
@@ -74,17 +74,5 @@ getUniqueList = (datetime, addr, city, zip, size, cb) ->
           if !found
             rest_list.splice random_i, 1
 
-      console.log cuisines
-      console.log rest_list.length
-
       cb null, unique_list
   )
-
-getUniqueList "ASAP", "855 Grove Ave", "Edison", "08820", 5,
-  (err, data) ->
-    if err
-      console.log err
-
-    for rest in data
-      console.log rest.na
-      console.log rest.cu
