@@ -6,7 +6,6 @@
 _ = require 'underscore'
 orderUtils = require './orderUtils'
 
-console.log orderUtils
 address = process.env.HUBOT_ADDRESS
 city = process.env.HUBOT_CITY
 state = process.env.HUBOT_STATE
