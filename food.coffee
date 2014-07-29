@@ -13,7 +13,6 @@ zip = process.env.HUBOT_ZIP
 
 module.exports = (robot) ->
 
-  canJoinOrder = false
   HUBOT_APP = {}
   HUBOT_APP.state = 1 #1-listening, 2-gathering people, 3-Selecting a restaurant 4-gathering orders
   HUBOT_APP.rid = ""
@@ -37,7 +36,6 @@ module.exports = (robot) ->
     user = msg.message.user.name
 
     if user is HUBOT_APP.leader and HUBOT_APP.state is 2
-      canJoinOrder = false
       msg.send 'Everyone is ready to order! Tell me "I\'m out" if you change your mind.'
 
       orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
@@ -68,7 +66,9 @@ module.exports = (robot) ->
       return
 
     restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
-    msg.send "Is #{restaurant.na} the restaurant you want to order from?"
+    msg.send "Alright lets order from #{restaurant.na}!"
+    HUBOT_APP.rid = restaurant.id
+    HUBOT_APP.state = 4
 
   # Listen for orders.
   robot.respond /I want (.*)/i, (msg) ->
