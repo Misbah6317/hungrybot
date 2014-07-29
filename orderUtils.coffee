@@ -63,8 +63,13 @@ getUniqueList = (datetime, addr, city, zip, size, cb) ->
 
         # add rest whose cuisine is not yet listed
         random_i = Math.floor(Math.random() * rest_list.length)
+
+        if(!rest_list[random_i])
+          console.log random_i
+          console.log rest_list.length
+
         found = false
-        while not found
+        while !found and rest_list.length > 0
           for cuisine in rest_list[random_i].cu
             if((cuisines.indexOf cuisine) == -1)
               unique_list.push rest_list[random_i]
