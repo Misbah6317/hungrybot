@@ -15,10 +15,11 @@ module.exports = (robot) ->
 
   canJoinOrder = false
   HUBOT_APP = {}
-  HUBOT_APP.state = 1 #1-listening, 2-gathering people, 3-gathering orders
+  HUBOT_APP.state = 1 #1-listening, 2-gathering people, 3-Selecting a restaurant 4-gathering orders
   HUBOT_APP.rid = ""
   HUBOT_APP.users = []
   HUBOT_APP.leader = ''
+  HUBOT_APP.restaurants = []
 
   # Listen for the start of an order.
   robot.respond /start order$/i, (msg) ->
@@ -42,10 +43,12 @@ module.exports = (robot) ->
       orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
         if err
           msg.send err
+        HUBOT_APP.restaurants = data
         restaurantsDisplay = ''
         for rest in data
           restaurantsDisplay += "#{rest.na}, "
-        msg.send "Select a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+        msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+        HUBOT_APP.state = 3
 
   # Listen for users to join the order.
   robot.respond /I'm in$/i, (msg) ->
@@ -59,9 +62,17 @@ module.exports = (robot) ->
       user = msg.message.user.name
       HUBOT_APP.users = _.filter HUBOT_APP.users, (userInOrder) -> userInOrder isnt user
 
-  # Listen for orders
+  # Listen for the leader to choose a restaurant.
+  robot.respond /(.*)/i, (msg) ->
+    if HUBOT_APP.state isnt 3 and msg.message.user.name isnt leader
+      return
+
+    restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
+    msg.send "Is #{restaurant.na} the restaurant you want to order from?"
+
+  # Listen for orders.
   robot.respond /I want (.*)/i, (msg) ->
-    if HUBOT_APP.state isnt 3
+    if HUBOT_APP.state isnt 4
       return
 
     order = escape(msg.match[1])
