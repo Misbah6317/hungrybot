@@ -9,6 +9,9 @@ module.exports = (robot) ->
 
   users = []
   canJoinOrder = false
+  state = 1 #1-listening, 2-gathering people, 3-gathering orders
+
+
 
   # Listen for the start of an order.
   robot.respond /start order$/i, (msg) ->
@@ -38,3 +41,13 @@ module.exports = (robot) ->
   robot.respond /I'm in$/i, (msg) ->
     user = msg.message.user.name
     users = _.filter users, (userInOrder) -> userInOrder isnt user
+
+
+  # Listen for orders
+  robot.respond /I want (.*)/i, (msg) ->
+    if( state != 3)
+      return
+
+    order = escape(msg.match[1])
+
+    msg.send(order)
