@@ -1,4 +1,5 @@
 ordrin = require 'ordrin-api'
+request = require 'request'
 ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.TEST
 
 placeOrder = (params, msg) ->
@@ -32,10 +33,58 @@ placeOrder = (params, msg) ->
     msg.send "Order placed: #{data}"
   )
 
-getRelevantMenuItems = (rid, desc, msg, cb) ->
-  msg.http("http://embarrassme.me:8000/TextSearch?rid=#{rid}&target=#{desc}&size=5")
-    .get() (err, res, body) ->
+getRelevantMenuItems = (rid, desc, cb) ->
+  request "http://embarrassme.me:8000/TextSearch?rid=#{rid}&target=#{desc}&size=5",
+    (err, res, body) ->
       if err
-        msg.send "Encountered an error :( #{err}"
-        return
-      cb JSON.parse(body)
+        console.log "Encountered an error :( #{err}"
+        return cb err
+
+      cb null, JSON.parse(body)
+
+getUniqueList = (datetime, addr, city, zip, size, cb) ->
+  ordrinApi.delivery_list(
+    datetime: datetime
+    addr: addr
+    city: city
+    zip: zip,
+
+    (err, rest_list) ->
+      if err
+        return cb err
+
+      unique_list = []
+      cuisines = []
+      
+      for i in [1..size] by 1
+        if(rest_list.length == 0)
+          break
+
+        #add rest whose cuisine is not yet listed
+        random_i = Math.floor(Math.random() * rest_list.length)
+        found = false
+        while !found
+          for cuisine in rest_list[random_i].cu
+            if((cuisines.indexOf cuisine) == -1)
+              unique_list.push rest_list[random_i]
+              cuisines = cuisines.concat rest_list[random_i].cu
+              found = true
+              rest_list.splice random_i, 1
+              break
+          if !found
+            rest_list.splice random_i, 1
+
+      console.log cuisines
+      console.log rest_list.length
+
+      cb null, unique_list
+  )
+
+getUniqueList "ASAP", "855 Grove Ave", "Edison", "08820", 5,
+  (err, data) ->
+    if err
+      console.log err
+
+    for rest in data
+      console.log rest.na
+      console.log rest.cu
