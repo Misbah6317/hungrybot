@@ -70,6 +70,10 @@ getUniqueList = (datetime, addr, city, zip, size, cb) ->
 
         found = false
         while !found and rest_list.length > 0
+          if(!rest_list[random_i].cu)
+            rest_list.splice random_i, 1
+            break
+
           for cuisine in rest_list[random_i].cu
             if((cuisines.indexOf cuisine) == -1)
               unique_list.push rest_list[random_i]
@@ -77,6 +81,7 @@ getUniqueList = (datetime, addr, city, zip, size, cb) ->
               found = true
               rest_list.splice random_i, 1
               break
+
           if not found
             rest_list.splice random_i, 1
 
