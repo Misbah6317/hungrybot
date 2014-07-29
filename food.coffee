@@ -4,9 +4,8 @@
 # Commands:
 
 _ = require 'underscore'
-orderUtils = require './orderUtils'
+orderUtils = require '../orderUtils'
 
-console.log orderUtils
 address = process.env.HUBOT_ADDRESS
 city = process.env.HUBOT_CITY
 state = process.env.HUBOT_STATE
@@ -16,8 +15,9 @@ module.exports = (robot) ->
 
   users = []
   canJoinOrder = false
-  state = 1 #1-listening, 2-gathering people, 3-gathering orders
-
+  HUBOT_APP = {}
+  HUBOT_APP.state = 3 #1-listening, 2-gathering people, 3-gathering orders
+  HUBOT_APP.rid = "28759"
 
 
   # Listen for the start of an order.
@@ -61,9 +61,12 @@ module.exports = (robot) ->
 
   # Listen for orders
   robot.respond /I want (.*)/i, (msg) ->
-    if( state != 3)
+    if( HUBOT_APP.state != 3)
       return
 
     order = escape(msg.match[1])
 
-    msg.send(order)
+    orderUtils.getRelevantMenuItems(HUBOT_APP.rid, order,
+      (err, data) ->
+        msg.send "Did you mean... \"" + data[0].name + "\"?"
+    )
