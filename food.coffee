@@ -3,7 +3,14 @@
 #
 # Commands:
 
-_ = require "underscore"
+_ = require 'underscore'
+orderUtils = require './orderUtils'
+
+console.log orderUtils
+address = process.env.HUBOT_ADDRESS
+city = process.env.HUBOT_CITY
+state = process.env.HUBOT_STATE
+zip = process.env.HUBOT_ZIP
 
 module.exports = (robot) ->
 
@@ -27,6 +34,15 @@ module.exports = (robot) ->
       if user is leader and canJoinOrder
         canJoinOrder = false
         doneMsg.send 'Everyone is ready to order! Tell me "I\'m out" if you change your mind.'
+
+        orderUtils.getUniqueList "ASAP", "902 Broadway", "New York", "10010", 5, (err, data) ->
+          if err
+            doneMsg.send err
+          doneMsg.send "#{data}"
+          restaurantsDisplay = ''
+          for rest in data
+            restaurantsDisplay += "#{rest.na}, "
+          doneMsg.send "#{restaurantsDisplay} (say \"more\" to see more restaurants)"
 
   # Listen for users to join the order.
   robot.respond /I'm in$/i, (msg) ->

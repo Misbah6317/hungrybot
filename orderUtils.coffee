@@ -51,6 +51,7 @@ getUniqueList = (datetime, addr, city, zip, size, cb) ->
 
     (err, rest_list) ->
       if err
+        console.log err
         return cb err
 
       unique_list = []
@@ -60,10 +61,10 @@ getUniqueList = (datetime, addr, city, zip, size, cb) ->
         if(rest_list.length == 0)
           break
 
-        #add rest whose cuisine is not yet listed
+        # add rest whose cuisine is not yet listed
         random_i = Math.floor(Math.random() * rest_list.length)
         found = false
-        while !found
+        while not found
           for cuisine in rest_list[random_i].cu
             if((cuisines.indexOf cuisine) == -1)
               unique_list.push rest_list[random_i]
@@ -71,8 +72,13 @@ getUniqueList = (datetime, addr, city, zip, size, cb) ->
               found = true
               rest_list.splice random_i, 1
               break
-          if !found
+          if not found
             rest_list.splice random_i, 1
 
       cb null, unique_list
   )
+
+module.exports =
+  placeOrder: placeOrder
+  getRelevantMenuItems: getRelevantMenuItems
+  getUniqueList: getUniqueList
