@@ -10,6 +10,9 @@ address = process.env.HUBOT_ADDRESS
 city = process.env.HUBOT_CITY
 state = process.env.HUBOT_STATE
 zip = process.env.HUBOT_ZIP
+email = process.env.HUBOT_ORDRIN_EMAIL
+firstName = process.env.HUBOT_ORDRIN_FIRST_NAME
+lastName = process.env.HUBOT_ORDRIN_LAST_NAME
 
 module.exports = (robot) ->
 
@@ -90,6 +93,10 @@ module.exports = (robot) ->
 
     orderUtils.getRelevantMenuItems(HUBOT_APP.rid, order,
       (err, data) ->
+        if err
+          console.log err
+          return err
+        console.log data[0]
         msg.send "#{msg.message.user.name} did you mean: \"#{data[0].name}\"?"
         HUBOT_APP.users[msg.message.user.name].order = data[0]
         HUBOT_APP.users[msg.message.user.name].state = 1
@@ -105,8 +112,25 @@ module.exports = (robot) ->
       msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].order.name}."
     else if HUBOT_APP.state is 5
       # confirm and place order
-      msg.send "Order placed!"
-      return
+      tray = ''
+      _.each HUBOT_APP.users, (user) ->
+        tray += "+user.order.tray"
+      params =
+        rid: HUBOT_APP.rid
+        email: email
+        first_name: firstName
+        last_name: lastName
+        phone: phone
+        address: address
+        city: city
+        state: state
+        tray: tray.substring(1)
+
+      orderUtils.placeOrder params, (err, data) ->
+        if err
+          console.log err
+          return err
+        msg.send "Order placed: #{data}"
 
   # Print current orders
   robot.respond /ls/i, (msg) ->
