@@ -4,7 +4,7 @@
 # Commands:
 
 _ = require 'underscore'
-orderUtils = require '../orderUtils'
+orderUtils = require './orderUtils'
 
 address = process.env.HUBOT_ADDRESS
 city = process.env.HUBOT_CITY
@@ -14,7 +14,7 @@ zip = process.env.HUBOT_ZIP
 module.exports = (robot) ->
 
   HUBOT_APP = {}
-  HUBOT_APP.state = 1 #1-listening, 2-gathering people, 3-Selecting a restaurant 4-gathering orders
+  HUBOT_APP.state = 1 #1-listening, 2-gathering people, 3-Selecting a restaurant 4-gathering orders 5-verify order
   HUBOT_APP.rid = ""
   HUBOT_APP.users = {} #user state 0 - waiting for order, 1 - waiting for confirmation, 2 - complete
   HUBOT_APP.leader = ''
@@ -29,7 +29,7 @@ module.exports = (robot) ->
       HUBOT_APP.users[leader].state = 0
       HUBOT_APP.state = 2
 
-      msg.send "#{leader} is the leader, and has started a group order. Reply \"I'm in\" to join."
+      msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order. Reply \"I'm in\" to join."
       msg.send 'Reply "done" when everyone is in.'
 
   # Listen for the leader to say that everyone is in.
@@ -42,12 +42,21 @@ module.exports = (robot) ->
       orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
         if err
           msg.send err
+          return err
         HUBOT_APP.restaurants = data
         restaurantsDisplay = ''
         for rest in data
           restaurantsDisplay += "#{rest.na}, "
         msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
         HUBOT_APP.state = 3
+    else if user is HUBOT_APP.leader and HUBOT_APP.state is 4
+      userString = ''
+      _.each HUBOT_APP.users, (user, name) ->
+        userString += "#{name}: #{user.order.name}\n"
+      msg.send "Awesome! Lets place this order. Here is what everyone wants:"
+      msg.send userString
+      msg.send "Is this correct?"
+      HUBOT_APP.state = 5
 
   # Listen for users to join the order.
   robot.respond /I'm in$/i, (msg) ->
@@ -57,11 +66,9 @@ module.exports = (robot) ->
       HUBOT_APP.users[user].state = 0
 
   # Listen for users who want to be removed from the order.
-  # fix this later
   robot.respond /I'm out$/i, (msg) ->
-    if HUBOT_APP.state is 2
-      user = msg.message.user.name
-      HUBOT_APP.users = _.filter HUBOT_APP.users, (userInOrder) -> userInOrder isnt user
+    user = msg.message.user.name
+    HUBOT_APP.users = _.filter HUBOT_APP.users, (userInOrder) -> userInOrder isnt user
 
   # Listen for the leader to choose a restaurant.
   robot.respond /(.*)/i, (msg) ->
@@ -70,6 +77,7 @@ module.exports = (robot) ->
 
     restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
     msg.send "Alright lets order from #{restaurant.na}!"
+    msg.send "Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done."
     HUBOT_APP.rid = restaurant.id
     HUBOT_APP.state = 4
 
@@ -82,7 +90,7 @@ module.exports = (robot) ->
 
     orderUtils.getRelevantMenuItems(HUBOT_APP.rid, order,
       (err, data) ->
-        msg.send "Did you mean... \"" + data[0].name + "\"?"
+        msg.send "#{msg.message.user.name} did you mean: \"#{data[0].name}\"?"
         HUBOT_APP.users[msg.message.user.name].order = data[0]
         HUBOT_APP.users[msg.message.user.name].state = 1
     )
@@ -91,20 +99,16 @@ module.exports = (robot) ->
   robot.respond /yes/i, (msg) ->
     username = msg.message.user.name
 
-    if HUBOT_APP.state isnt 4
+    if HUBOT_APP.state is 4 and HUBOT_APP.users[username].state is 1
+      HUBOT_APP.users[username].order_confirmed = true
+      HUBOT_APP.users[username].state = 2
+      msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].order.name}."
+    else if HUBOT_APP.state is 5
+      # confirm and place order
+      msg.send "Order placed!"
       return
-    
-    if HUBOT_APP.users[username].state isnt 1
-      return
-
-    HUBOT_APP.users[username].order_confirmed = true
-    HUBOT_APP.users[username].state = 2
 
   # Print current orders
   robot.respond /ls/i, (msg) ->
-    console.log "printing orders"
-    console.log HUBOT_APP.users
-
     for user in HUBOT_APP.users
       msg.send "" + user + " is getting " + HUBOT_APP.users[user].order.name
-      console.log user
