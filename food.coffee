@@ -4,7 +4,7 @@
 # Commands:
 
 _ = require 'underscore'
-orderUtils = require './orderUtils'
+orderUtils = require '../orderUtils'
 
 address = process.env.HUBOT_ADDRESS
 city = process.env.HUBOT_CITY
@@ -16,7 +16,7 @@ module.exports = (robot) ->
   HUBOT_APP = {}
   HUBOT_APP.state = 1 #1-listening, 2-gathering people, 3-Selecting a restaurant 4-gathering orders
   HUBOT_APP.rid = ""
-  HUBOT_APP.users = []
+  HUBOT_APP.users = {} #user state 0 - waiting for order, 1 - waiting for confirmation, 2 - complete
   HUBOT_APP.leader = ''
   HUBOT_APP.restaurants = []
 
@@ -25,7 +25,8 @@ module.exports = (robot) ->
     if HUBOT_APP.state is 1
       leader = msg.message.user.name
       HUBOT_APP.leader = leader
-      HUBOT_APP.users.push leader
+      HUBOT_APP.users[leader] = {}
+      HUBOT_APP.users[leader].state = 0
       HUBOT_APP.state = 2
 
       msg.send "#{leader} is the leader, and has started a group order. Reply \"I'm in\" to join."
@@ -51,10 +52,12 @@ module.exports = (robot) ->
   # Listen for users to join the order.
   robot.respond /I'm in$/i, (msg) ->
     user = msg.message.user.name
-    if HUBOT_APP.state is 2 and user not in HUBOT_APP.users
-      HUBOT_APP.users.push user
+    if HUBOT_APP.state is 2 and user not in HUBOT_APP.users #fix not in check
+      HUBOT_APP.users[user] = {}
+      HUBOT_APP.users[user].state = 0
 
   # Listen for users who want to be removed from the order.
+  # fix this later
   robot.respond /I'm out$/i, (msg) ->
     if HUBOT_APP.state is 2
       user = msg.message.user.name
@@ -80,4 +83,28 @@ module.exports = (robot) ->
     orderUtils.getRelevantMenuItems(HUBOT_APP.rid, order,
       (err, data) ->
         msg.send "Did you mean... \"" + data[0].name + "\"?"
+        HUBOT_APP.users[msg.message.user.name].order = data[0]
+        HUBOT_APP.users[msg.message.user.name].state = 1
     )
+
+  # Listen for confirmation
+  robot.respond /yes/i, (msg) ->
+    username = msg.message.user.name
+
+    if HUBOT_APP.state isnt 4
+      return
+    
+    if HUBOT_APP.users[username].state isnt 1
+      return
+
+    HUBOT_APP.users[username].order_confirmed = true
+    HUBOT_APP.users[username].state = 2
+
+  # Print current orders
+  robot.respond /ls/i, (msg) ->
+    console.log "printing orders"
+    console.log HUBOT_APP.users
+
+    for user in HUBOT_APP.users
+      msg.send "" + user + " is getting " + HUBOT_APP.users[user].order.name
+      console.log user
