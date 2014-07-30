@@ -2,7 +2,7 @@ ordrin = require 'ordrin-api'
 request = require 'request'
 ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.TEST
 
-placeOrder = (params, msg) ->
+placeOrder = (params, cb) ->
   options =
     'rid': params.rid
     'em': params.email
@@ -26,12 +26,7 @@ placeOrder = (params, msg) ->
     'card_bill_zip': process.env.HUBOT_CARD_BILL_ZIP
     'card_bill_phone': process.env.HUBOT_CARD_BILL_PHONE
 
-  ordrinApi.order_guest(options, (err, data) ->
-    if err
-      console.log err
-      return err
-    msg.send "Order placed: #{data}"
-  )
+  ordrinApi.order_guest options, cb
 
 getRelevantMenuItems = (rid, desc, cb) ->
   request "http://embarrassme.me:8000/TextSearch?rid=#{rid}&target=#{desc}&size=5",
