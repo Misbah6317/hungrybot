@@ -139,6 +139,16 @@ module.exports = (robot) ->
           return err
         msg.send "Order placed: #{data}"
 
+  # Listen for confirmation
+  robot.respond /no/i, (msg) ->
+    username = msg.message.user.name
+
+    if HUBOT_APP.state is 4 and HUBOT_APP.users[username].state is 1
+      msg.send "Well, #{username} what DO you want then?"
+    else if HUBOT_APP.state is 5
+      msg.send "It's all good. I'll keep listening for orders!"
+      HUBOT_APP.state = 4
+
   # Print current orders
   robot.respond /ls/i, (msg) ->
     for user in HUBOT_APP.users
