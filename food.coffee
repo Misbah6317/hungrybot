@@ -48,8 +48,8 @@ module.exports = (robot) ->
           return err
         HUBOT_APP.restaurants = data
         restaurantsDisplay = ''
-        for rest in data
-          restaurantsDisplay += "#{rest.na}, "
+        for rest, index in data
+          restaurantsDisplay += "(#{index}) #{rest.na}, "
         msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
         HUBOT_APP.state = 3
     else if user is HUBOT_APP.leader and HUBOT_APP.state is 4
@@ -78,11 +78,14 @@ module.exports = (robot) ->
     if HUBOT_APP.state isnt 3 and msg.message.user.name isnt leader
       return
 
-    restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
-    msg.send "Alright lets order from #{restaurant.na}!"
-    msg.send "Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done."
-    HUBOT_APP.rid = restaurant.id
-    HUBOT_APP.state = 4
+    if isFinite msg.match[1]
+      restaurant = HUBOT_APP.restaurants[msg.match[1]]
+      msg.send "Alright lets order from #{restaurant.na}!"
+      msg.send "Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done."
+      HUBOT_APP.rid = restaurant.id
+      HUBOT_APP.state = 4
+    else
+      msg.send "I didn't get that. Can you try telling me again?"
 
   # Listen for orders.
   robot.respond /I want (.*)/i, (msg) ->
