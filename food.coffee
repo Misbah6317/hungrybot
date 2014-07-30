@@ -10,6 +10,7 @@ address = process.env.HUBOT_ADDRESS
 city = process.env.HUBOT_CITY
 state = process.env.HUBOT_STATE
 zip = process.env.HUBOT_ZIP
+phone = process.env.HUBOT_ORDRIN_PHONE
 email = process.env.HUBOT_ORDRIN_EMAIL
 firstName = process.env.HUBOT_ORDRIN_FIRST_NAME
 lastName = process.env.HUBOT_ORDRIN_LAST_NAME
@@ -82,7 +83,7 @@ module.exports = (robot) ->
       restaurant = HUBOT_APP.restaurants[msg.match[1]]
       msg.send "Alright lets order from #{restaurant.na}!"
       msg.send "Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done."
-      HUBOT_APP.rid = restaurant.id
+      HUBOT_APP.rid = "#{restaurant.id}"
       HUBOT_APP.state = 4
     else
       msg.send "I didn't get that. Can you try telling me again?"
@@ -117,18 +118,21 @@ module.exports = (robot) ->
       # confirm and place order
       tray = ''
       _.each HUBOT_APP.users, (user) ->
-        tray += "+user.order.tray"
+        tray += "+#{user.order.tray}"
+
       params =
         rid: HUBOT_APP.rid
         email: email
         first_name: firstName
         last_name: lastName
         phone: phone
-        address: address
+        addr: address
         city: city
         state: state
+        zip: zip
         tray: tray.substring(1)
 
+      console.log params
       orderUtils.placeOrder params, (err, data) ->
         if err
           console.log err
