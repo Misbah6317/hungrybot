@@ -4,7 +4,7 @@
 # Commands:
 
 _ = require 'underscore'
-orderUtils = require './orderUtils'
+orderUtils = require '../orderUtils'
 
 address = process.env.HUBOT_ADDRESS
 city = process.env.HUBOT_CITY
@@ -20,7 +20,7 @@ module.exports = (robot) ->
   HUBOT_APP = {}
   HUBOT_APP.state = 1 #1-listening, 2-gathering people, 3-Selecting a restaurant 4-gathering orders 5-verify order
   HUBOT_APP.rid = ""
-  HUBOT_APP.users = {} #user state 0 - waiting for order, 1 - waiting for confirmation, 2 - complete
+  HUBOT_APP.users = {} #user state 0 - waiting for order, 1 - waiting for confirmation, 2 - waiting for new request confirmation, 3 - complete
   HUBOT_APP.leader = ''
   HUBOT_APP.restaurants = []
 
@@ -30,6 +30,7 @@ module.exports = (robot) ->
       leader = msg.message.user.name
       HUBOT_APP.leader = leader
       HUBOT_APP.users[leader] = {}
+      HUBOT_APP.users[leader].orders = []
       HUBOT_APP.users[leader].state = 0
       HUBOT_APP.state = 2
 
@@ -56,7 +57,8 @@ module.exports = (robot) ->
     else if user is HUBOT_APP.leader and HUBOT_APP.state is 4
       userString = ''
       _.each HUBOT_APP.users, (user, name) ->
-        userString += "#{name}: #{user.order.name}\n"
+        for order in user.orders
+          userString += "#{name}: #{order.name}\n"
       msg.send "Awesome! Lets place this order. Here is what everyone wants:"
       msg.send userString
       msg.send "Is this correct?"
@@ -67,6 +69,7 @@ module.exports = (robot) ->
     user = msg.message.user.name
     if HUBOT_APP.state is 2 and user not in HUBOT_APP.users #fix not in check
       HUBOT_APP.users[user] = {}
+      HUBOT_APP.users[user].orders = []
       HUBOT_APP.users[user].state = 0
 
   # Listen for users who want to be removed from the order.
@@ -90,7 +93,7 @@ module.exports = (robot) ->
 
   # Listen for orders.
   robot.respond /I want (.*)/i, (msg) ->
-    if HUBOT_APP.state isnt 4
+    if HUBOT_APP.state isnt 4 and HUBOT_APP.users[msg.message.user.name].state isnt 0
       return
 
     order = escape(msg.match[1])
@@ -102,7 +105,7 @@ module.exports = (robot) ->
           return err
         console.log data[0]
         msg.send "#{msg.message.user.name} did you mean: \"#{data[0].name}\"?"
-        HUBOT_APP.users[msg.message.user.name].order = data[0]
+        HUBOT_APP.users[msg.message.user.name].pending_order = data[0]
         HUBOT_APP.users[msg.message.user.name].state = 1
     )
 
@@ -110,15 +113,20 @@ module.exports = (robot) ->
   robot.respond /yes/i, (msg) ->
     username = msg.message.user.name
 
+    if HUBOT_APP.state is 4 and HUBOT_APP.users[username].state is 2
+      msg.send "#{username}, aight fatty. what do you want?"
+      HUBOT_APP.users[username].state = 0
     if HUBOT_APP.state is 4 and HUBOT_APP.users[username].state is 1
-      HUBOT_APP.users[username].order_confirmed = true
+      HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].pending_order)
       HUBOT_APP.users[username].state = 2
-      msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].order.name}."
+      msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].pending_order.name}."
+      msg.send "#{username}, do you want anything else?"
     else if HUBOT_APP.state is 5
       # confirm and place order
       tray = ''
       _.each HUBOT_APP.users, (user) ->
-        tray += "+#{user.order.tray}"
+        for order in user.orders
+          tray += "+#{order.tray}"
 
       params =
         rid: HUBOT_APP.rid
@@ -143,6 +151,9 @@ module.exports = (robot) ->
   robot.respond /no/i, (msg) ->
     username = msg.message.user.name
 
+    if HUBOT_APP.state is 4 and HUBOT_APP.users[username].state is 2
+      HUBOT_APP.users[username].state = 3
+      msg.send "#{username}, hold on while everyone else orders!"
     if HUBOT_APP.state is 4 and HUBOT_APP.users[username].state is 1
       msg.send "Well, #{username} what DO you want then?"
     else if HUBOT_APP.state is 5
