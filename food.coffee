@@ -103,6 +103,7 @@ module.exports = (robot) ->
       (err, data) ->
         if err
           console.log err
+          msg.send "Sorry I can't find anything like that."
           return err
         console.log data[0]
         msg.send "#{msg.message.user.name} did you mean: \"#{data[0].name} (Price: #{data[0].price})\"?"
