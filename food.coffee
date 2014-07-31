@@ -4,7 +4,7 @@
 # Commands:
 
 _ = require 'underscore'
-orderUtils = require '../orderUtils'
+orderUtils = require './orderUtils'
 
 address = process.env.HUBOT_ADDRESS
 city = process.env.HUBOT_CITY
@@ -68,8 +68,9 @@ module.exports = (robot) ->
   # Listen for users who want to be removed from the order.
   robot.respond /I'm out$/i, (msg) ->
     user = msg.message.user.name
-    HUBOT_APP.users = _.filter HUBOT_APP.users, (userInOrder) -> userInOrder isnt user and userInOrder isnt HUBOT_APP.leader
-    msg.send "I'm sorry to hear that. Looks like #{user} doesn't want to get food with us."
+    if user isnt HUBOT_APP.leader
+      HUBOT_APP.users = _.filter HUBOT_APP.users, (userInOrder) -> userInOrder isnt user
+      msg.send "I'm sorry to hear that. Looks like #{user} doesn't want to get food with us."
 
   # Listen for the leader to choose a restaurant.
   robot.respond /(.*)/i, (msg) ->
