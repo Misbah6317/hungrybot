@@ -24,6 +24,13 @@ module.exports = (robot) ->
   HUBOT_APP.leader = ''
   HUBOT_APP.restaurants = []
 
+  # What to do in case of an emergency.
+  robot.error (err, msg) ->
+    console.log err
+    if msg?
+      console.log msg
+      msg.send "Something bad happened! #{err}"
+
   # Listen for the start of an order.
   robot.respond /start order$/i, (msg) ->
     if HUBOT_APP.state is 1
@@ -64,7 +71,7 @@ module.exports = (robot) ->
 
   # Listen for the leader to choose a restaurant.
   robot.respond /(.*)/i, (msg) ->
-    if HUBOT_APP.state isnt 2 and msg.message.user.name isnt leader
+    if HUBOT_APP.state isnt 2 or msg.message.user.name isnt HUBOT_APP.leader
       return
 
     if isFinite msg.match[1]
@@ -77,9 +84,11 @@ module.exports = (robot) ->
 
   # Listen for orders.
   robot.respond /I want (.*)/i, (msg) ->
+    if HUBOT_APP.state isnt 3
+      return
+
     user = msg.message.user.name
-    console.log HUBOT_APP
-    if user isnt HUBOT_APP.leader and HUBOT_APP.state is 3 and user not in _.keys(HUBOT_APP.users)
+    if user isnt HUBOT_APP.leader and user not in _.keys(HUBOT_APP.users)
       HUBOT_APP.users[user] = {}
       HUBOT_APP.users[user].state = 0
       msg.send "Awesome! #{user} is in!"
