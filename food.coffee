@@ -94,6 +94,7 @@ module.exports = (robot) ->
     if user isnt HUBOT_APP.leader and user not in _.keys(HUBOT_APP.users)
       HUBOT_APP.users[user] = {}
       HUBOT_APP.users[user].state = 0
+      HUBOT_APP.users[user].orders = []
       msg.send "Awesome! #{user} is in!"
 
     order = escape(msg.match[1])
