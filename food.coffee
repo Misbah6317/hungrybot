@@ -79,7 +79,7 @@ module.exports = (robot) ->
   robot.respond /I want (.*)/i, (msg) ->
     user = msg.message.user.name
     console.log HUBOT_APP
-    if HUBOT_APP.state is 3 and user not in HUBOT_APP.users #fix not in check
+    if user isnt HUBOT_APP.leader and HUBOT_APP.state is 3 and user not in _.keys(HUBOT_APP.users)
       HUBOT_APP.users[user] = {}
       HUBOT_APP.users[user].state = 0
       msg.send "Awesome! #{user} is in!"
