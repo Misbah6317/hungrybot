@@ -33,7 +33,7 @@ module.exports = (robot) ->
       HUBOT_APP.users[leader].state = 0
       HUBOT_APP.state = 2
 
-      msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order. Reply \"I'm in\" to join."
+      msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order. Tell me \"I'm in\" to join, and \"I'm out\" to exit the order."
       msg.send 'Reply "done" when everyone is in.'
 
   # Listen for the leader to say that everyone is in.
@@ -41,7 +41,7 @@ module.exports = (robot) ->
     user = msg.message.user.name
 
     if user is HUBOT_APP.leader and HUBOT_APP.state is 2
-      msg.send 'Everyone is ready to order! Tell me "I\'m out" if you change your mind.'
+      msg.send 'Everyone is ready to order!'
 
       orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
         if err
@@ -68,11 +68,13 @@ module.exports = (robot) ->
     if HUBOT_APP.state is 2 and user not in HUBOT_APP.users #fix not in check
       HUBOT_APP.users[user] = {}
       HUBOT_APP.users[user].state = 0
+      msg.send "Awesome! #{user} is in!"
 
   # Listen for users who want to be removed from the order.
   robot.respond /I'm out$/i, (msg) ->
     user = msg.message.user.name
     HUBOT_APP.users = _.filter HUBOT_APP.users, (userInOrder) -> userInOrder isnt user
+    msg.send "I'm sorry to hear that. Looks like #{user} doesn't want to get food with us."
 
   # Listen for the leader to choose a restaurant.
   robot.respond /(.*)/i, (msg) ->
@@ -136,8 +138,10 @@ module.exports = (robot) ->
       orderUtils.placeOrder params, (err, data) ->
         if err
           console.log err
+          msg.send "Sorry guys! I messed up: #{data.body._msg}"
           return err
-        msg.send "Order placed: #{data}"
+        msg.send "Order placed: #{data.msg}"
+        HUBOT_APP.state = 1
 
   # Listen for confirmation
   robot.respond /no/i, (msg) ->
