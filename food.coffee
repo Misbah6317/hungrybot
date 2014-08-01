@@ -42,6 +42,9 @@ module.exports = (robot) ->
       HUBOT_APP.users[leader].state = 0
       msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order."
 
+      msg.send "Lets order from Homes since you guys like it so much!"
+      HUBOT_APP.rid = "24311"
+      HUBOT_APP.state = 3
       orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
         if err
           msg.send err
@@ -105,29 +108,28 @@ module.exports = (robot) ->
 
   # Listen for orders.
   robot.respond /I want (.*)/i, (msg) ->
-    if HUBOT_APP.state isnt 3 and HUBOT_APP.users[msg.message.user.name].state isnt 0
-      return
+    if HUBOT_APP.state is 3
+      user = msg.message.user.name
+      if user isnt HUBOT_APP.leader and user not in _.keys(HUBOT_APP.users)
+        HUBOT_APP.users[user] = {}
+        HUBOT_APP.users[user].state = 0
+        HUBOT_APP.users[user].orders = []
+        msg.send "Awesome! #{user} is in!"
 
-    user = msg.message.user.name
-    if user isnt HUBOT_APP.leader and user not in _.keys(HUBOT_APP.users)
-      HUBOT_APP.users[user] = {}
-      HUBOT_APP.users[user].state = 0
-      HUBOT_APP.users[user].orders = []
-      msg.send "Awesome! #{user} is in!"
+      if HUBOT_APP.users[user].state in [0, 2]
+        order = escape(msg.match[1])
 
-    order = escape(msg.match[1])
-
-    orderUtils.getRelevantMenuItems(HUBOT_APP.rid, order,
-      (err, data) ->
-        if err
-          console.log err
-          msg.send "Sorry I can't find anything like that."
-          return err
-        console.log data[0]
-        msg.send "#{msg.message.user.name} did you mean: \"#{data[0].name} (Price: #{data[0].price})\"?"
-        HUBOT_APP.users[msg.message.user.name].pending_order = data[0]
-        HUBOT_APP.users[msg.message.user.name].state = 1
-    )
+        orderUtils.getRelevantMenuItems(HUBOT_APP.rid, order,
+          (err, data) ->
+            if err
+              console.log err
+              msg.send "Sorry I can't find anything like that."
+              return err
+            console.log data[0]
+            msg.send "#{msg.message.user.name} did you mean: \"#{data[0].name} (Price: #{data[0].price})\"?"
+            HUBOT_APP.users[msg.message.user.name].pending_order = data[0]
+            HUBOT_APP.users[msg.message.user.name].state = 1
+        )
 
   # Listen for confirmation
   robot.respond /yes/i, (msg) ->
@@ -178,9 +180,9 @@ module.exports = (robot) ->
     if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
       HUBOT_APP.users[username].state = 3
       msg.send "#{username}, hold on while everyone else orders!"
-    if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
-
+    else if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
       msg.send "Well, #{username} what DO you want then?"
+      HUBOT_APP.users[username].state = 0
     else if HUBOT_APP.state is 4
       msg.send "It's all good. I'll keep listening for orders!"
       HUBOT_APP.state = 3
