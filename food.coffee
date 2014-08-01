@@ -40,10 +40,9 @@ module.exports = (robot) ->
       HUBOT_APP.users[leader] = {}
       HUBOT_APP.users[leader].orders = []
       HUBOT_APP.users[leader].state = 0
-      msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order."
+      msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order. Wait while I find some cool nearby restaurants."
 
       orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
-        console.log "Made it to the CB"
         if err
           msg.send err
           return err
@@ -76,12 +75,12 @@ module.exports = (robot) ->
     user = msg.message.user.name
     if user is HUBOT_APP.leader and HUBOT_APP.state is 3
       userString = ''
+      console.log HUBOT_APP.users
       _.each HUBOT_APP.users, (user, name) ->
         for order in user.orders
+          console.log name
           userString += "#{name}: #{order.name}\n"
-      msg.send "Awesome! Lets place this order. Here is what everyone wants:"
-      msg.send userString
-      msg.send "Is this correct?"
+      msg.send "Awesome! Lets place this order. Here is what everyone wants:\n #{userString}\nIs this correct?"
       HUBOT_APP.state = 4
 
   # Listen for users who want to be removed from the order.
@@ -134,13 +133,12 @@ module.exports = (robot) ->
     username = msg.message.user.name
 
     if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
-      msg.send "#{username}, aight fatty. what do you want?"
+      msg.send "Wow #{username}, you sure can eat a lot! What do you want?"
       HUBOT_APP.users[username].state = 0
     if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
       HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].pending_order)
       HUBOT_APP.users[username].state = 2
-      msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].pending_order.name}."
-      msg.send "#{username}, do you want anything else?"
+      msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].pending_order.name}. #{username}, do you want anything else?"
     else if HUBOT_APP.state is 4
       # confirm and place order
       tray = ''
@@ -181,7 +179,7 @@ module.exports = (robot) ->
         pendingOrder = HUBOT_APP.users[username].currentOrders[0]
         HUBOT_APP.users[username].pending_order = pendingOrder
         HUBOT_APP.users[username].currentOrders = HUBOT_APP.users[username].currentOrders[1..]
-        msg.send "How about #{pendingOrder.name} (Price: #{pendingOrder.price}?"
+        msg.send "How about #{pendingOrder.name} (Price: #{pendingOrder.price})?"
       else
         msg.send "Well, #{username} what DO you want then?"
         HUBOT_APP.users[username].state = 0
