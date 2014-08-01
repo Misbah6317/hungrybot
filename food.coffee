@@ -23,6 +23,7 @@ module.exports = (robot) ->
   HUBOT_APP.users = {} #user state 0 - waiting for order, 1 - waiting for confirmation, 2 - waiting for new request confirmation, 3 - complete
   HUBOT_APP.leader = ''
   HUBOT_APP.restaurants = []
+  HUBOT_APP.restaurantLimit = 5
 
   # What to do in case of an emergency.
   robot.error (err, msg) ->
@@ -42,6 +43,23 @@ module.exports = (robot) ->
       msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order."
 
       orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
+        if err
+          msg.send err
+          return err
+        HUBOT_APP.restaurants = data
+        restaurantsDisplay = ''
+        for rest, index in data
+          restaurantsDisplay += "(#{index}) #{rest.na}, "
+        msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+        HUBOT_APP.state = 2
+
+  # Listen for the leader to ask for more restaurants.
+  robot.respond /more$/i, (msg) ->
+    user = msg.message.user.name
+    if user is HUBOT_APP.leader and HUBOT_APP.state is 2
+      msg.send "Alright let me find more restaurants."
+      HUBOT_APP.restaurantLimit += 5
+      orderUtils.getUniqueList "ASAP", address, city, zip, HUBOT_APP.restaurantLimit, (err, data) ->
         if err
           msg.send err
           return err
@@ -82,7 +100,7 @@ module.exports = (robot) ->
       msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
       HUBOT_APP.rid = "#{restaurant.id}"
       HUBOT_APP.state = 3
-    else
+    else if msg.match[1] isnt "more"
       msg.send "I didn't get that. Can you try telling me again?"
 
   # Listen for orders.
