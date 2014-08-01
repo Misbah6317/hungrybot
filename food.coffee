@@ -116,7 +116,7 @@ module.exports = (robot) ->
         HUBOT_APP.users[user].orders = []
         msg.send "Awesome! #{user} is in!"
 
-      if HUBOT_APP.users[user].state in [0, 2]
+      if HUBOT_APP.users[user].state in [0, 1, 2]
         order = escape(msg.match[1])
 
         orderUtils.getRelevantMenuItems(HUBOT_APP.rid, order,
