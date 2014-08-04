@@ -33,7 +33,7 @@ module.exports = (robot) ->
       msg.send "Something bad happened! #{err}"
 
   # Listen for the start of an order.
-  robot.respond /start order$/i, (msg) ->
+  robot.respond /start order(.*)$/i, (msg) ->
     if HUBOT_APP.state is 1
       leader = msg.message.user.name
       HUBOT_APP.leader = leader
@@ -42,16 +42,28 @@ module.exports = (robot) ->
       HUBOT_APP.users[leader].state = 0
       msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order. Wait while I find some cool nearby restaurants."
 
-      orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
-        if err
-          msg.send err
-          return err
-        HUBOT_APP.restaurants = data
-        restaurantsDisplay = ''
-        for rest, index in data
-          restaurantsDisplay += "(#{index}) #{rest.na}, "
-        msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
-        HUBOT_APP.state = 2
+      if msg.match[1].trim() isnt ''
+        orderUtils.getRelevantRestaurants msg.match[1], "ASAP", address, city, zip, (err, data) ->
+          if err
+            msg.send err
+            return err
+          HUBOT_APP.restaurants = data
+          restaurantsDisplay = ''
+          for rest, index in data
+            restaurantsDisplay += "(#{index}) #{rest.na}, "
+          msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+          HUBOT_APP.state = 2
+      else
+        orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
+          if err
+            msg.send err
+            return err
+          HUBOT_APP.restaurants = data
+          restaurantsDisplay = ''
+          for rest, index in data
+            restaurantsDisplay += "(#{index}) #{rest.na}, "
+          msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+          HUBOT_APP.state = 2
 
   # Listen for the leader to ask for more restaurants.
   robot.respond /more$/i, (msg) ->

@@ -1,5 +1,6 @@
 ordrin = require 'ordrin-api'
 request = require 'request'
+S = require 'string'
 ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.TEST
 
 placeOrder = (params, cb) ->
@@ -36,6 +37,26 @@ getRelevantMenuItems = (rid, desc, cb) ->
         return cb err
 
       cb null, JSON.parse(body)
+
+getRelevantRestaurants = (name, datetime, addr, city, zip, cb) ->
+  ordrinApi.delivery_list(
+    datetime: datetime
+    addr: addr
+    city: city
+    zip: zip,
+
+    (err, restaurants) ->
+      if err
+        console.log err
+        return cb err
+
+      relevantRestaurants = []
+      for restaurant in restaurants
+        if S(restaurant.na.toLowerCase()).contains name.toLowerCase()
+          relevantRestaurants.push restaurant
+
+      cb null, relevantRestaurants
+  )
 
 getUniqueList = (datetime, addr, city, zip, size, cb) ->
   ordrinApi.delivery_list(
@@ -82,4 +103,5 @@ getUniqueList = (datetime, addr, city, zip, size, cb) ->
 module.exports =
   placeOrder: placeOrder
   getRelevantMenuItems: getRelevantMenuItems
+  getRelevantRestaurants: getRelevantRestaurants
   getUniqueList: getUniqueList
