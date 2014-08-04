@@ -43,7 +43,8 @@ module.exports = (robot) ->
       msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order. Wait while I find some cool nearby restaurants."
 
       if msg.match[1].trim() isnt ''
-        orderUtils.getRelevantRestaurants msg.match[1], "ASAP", address, city, zip, (err, data) ->
+        HUBOT_APP.keywordString = msg.match[1].trim()
+        orderUtils.getRelevantRestaurants msg.match[1].trim(), "ASAP", address, city, zip, 5, (err, data) ->
           if err
             msg.send err
             return err
@@ -52,6 +53,7 @@ module.exports = (robot) ->
           for rest, index in data
             restaurantsDisplay += "(#{index}) #{rest.na}, "
           msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+          HUBOT_APP.filtered = true
           HUBOT_APP.state = 2
       else
         orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
@@ -62,6 +64,7 @@ module.exports = (robot) ->
           restaurantsDisplay = ''
           for rest, index in data
             restaurantsDisplay += "(#{index}) #{rest.na}, "
+          HUBOT_APP.filtered = false
           msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
           HUBOT_APP.state = 2
 
@@ -71,16 +74,28 @@ module.exports = (robot) ->
     if user is HUBOT_APP.leader and HUBOT_APP.state is 2
       msg.send "Alright let me find more restaurants."
       HUBOT_APP.restaurantLimit += 5
-      orderUtils.getUniqueList "ASAP", address, city, zip, HUBOT_APP.restaurantLimit, (err, data) ->
-        if err
-          msg.send err
-          return err
-        HUBOT_APP.restaurants = data
-        restaurantsDisplay = ''
-        for rest, index in data
-          restaurantsDisplay += "(#{index}) #{rest.na}, "
-        msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
-        HUBOT_APP.state = 2
+      if HUBOT_APP.filtered
+        orderUtils.getRelevantRestaurants HUBOT_APP.keywordString, "ASAP", address, city, zip, HUBOT_APP.restaurantLimit, (err, data) ->
+          if err
+            msg.send err
+            return err
+          HUBOT_APP.restaurants = data
+          restaurantsDisplay = ''
+          for rest, index in data
+            restaurantsDisplay += "(#{index}) #{rest.na}, "
+          msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+          HUBOT_APP.state = 2
+      else
+        orderUtils.getUniqueList "ASAP", address, city, zip, HUBOT_APP.restaurantLimit, (err, data) ->
+          if err
+            msg.send err
+            return err
+          HUBOT_APP.restaurants = data
+          restaurantsDisplay = ''
+          for rest, index in data
+            restaurantsDisplay += "(#{index}) #{rest.na}, "
+          msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+          HUBOT_APP.state = 2
 
   # Listen for the leader to say that everyone is in.
   robot.respond /done$/i, (msg) ->

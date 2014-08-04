@@ -38,7 +38,7 @@ getRelevantMenuItems = (rid, desc, cb) ->
 
       cb null, JSON.parse(body)
 
-getRelevantRestaurants = (name, datetime, addr, city, zip, cb) ->
+getRelevantRestaurants = (name, datetime, addr, city, zip, limit, cb) ->
   ordrinApi.delivery_list(
     datetime: datetime
     addr: addr
@@ -54,6 +54,8 @@ getRelevantRestaurants = (name, datetime, addr, city, zip, cb) ->
       for restaurant in restaurants
         if S(restaurant.na.toLowerCase()).contains name.toLowerCase()
           relevantRestaurants.push restaurant
+        if relevantRestaurants.length > limit
+          return cb null, relevantRestaurants
 
       cb null, relevantRestaurants
   )
