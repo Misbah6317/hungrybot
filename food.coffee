@@ -2,6 +2,8 @@
 #   Commands for ordering food.
 #
 # Commands:
+#   hubot start order - Start a group order.
+#   hubot start order <text> - Start a group order while filtering through available restaurants with the given text.
 
 _ = require 'underscore'
 orderUtils = require './orderUtils'
@@ -48,6 +50,9 @@ module.exports = (robot) ->
           if err
             msg.send err
             return err
+          if data.length is 0
+            msg.send "There were no restaurants that fit that description. Try again."
+            return
           HUBOT_APP.restaurants = data
           restaurantsDisplay = ''
           for rest, index in data
@@ -149,10 +154,14 @@ module.exports = (robot) ->
               console.log err
               msg.send "Sorry I can't find anything like that."
               return err
-            msg.send "#{msg.message.user.name} did you mean: \"#{data[0].name} (Price: #{data[0].price})\"?"
-            HUBOT_APP.users[msg.message.user.name].currentOrders = data[1..]
-            HUBOT_APP.users[msg.message.user.name].pending_order = data[0]
-            HUBOT_APP.users[msg.message.user.name].state = 1
+
+            if data?
+              msg.send "#{msg.message.user.name} did you mean: \"#{data[0].name} (Price: #{data[0].price})\"?"
+              HUBOT_APP.users[msg.message.user.name].currentOrders = data[1..]
+              HUBOT_APP.users[msg.message.user.name].pending_order = data[0]
+              HUBOT_APP.users[msg.message.user.name].state = 1
+            else
+              msg.send "Sorry I can't find anything like that. Try again."
         )
 
   # Listen for confirmation
