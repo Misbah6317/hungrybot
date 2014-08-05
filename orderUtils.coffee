@@ -54,8 +54,9 @@ getRelevantRestaurants = (name, datetime, addr, city, zip, limit, cb) ->
 
       relevantRestaurants = []
       for restaurant in restaurants
-        restContainsCuisine = name in _.map(restaurant.cu, (rest) -> rest.toLowerCase())
-        if restContainsCuisine or restaurant.na.toLowerCase().indexOf name >= 0
+        restContainsCuisine = _.contains _.map(restaurant.cu, (rest) -> rest.toLowerCase()), name
+        restContainsName = restaurant.na.toLowerCase().indexOf(name) isnt -1
+        if restContainsCuisine or restContainsName
           relevantRestaurants.push restaurant
         if relevantRestaurants.length > limit
           return cb null, relevantRestaurants
