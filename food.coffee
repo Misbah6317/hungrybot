@@ -136,16 +136,24 @@ module.exports = (robot) ->
 
   # Listen for the leader to choose a restaurant.
   robot.respond /(.*)/i, (msg) ->
-    if HUBOT_APP.state isnt 2 or msg.message.user.name isnt HUBOT_APP.leader
-      return
-
-    if isFinite msg.match[1]
-      restaurant = HUBOT_APP.restaurants[msg.match[1]]
-      msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
-      HUBOT_APP.rid = "#{restaurant.id}"
-      HUBOT_APP.state = 3
-    else if msg.match[1] isnt "more"
-      msg.send "I didn't get that. Can you try telling me again?"
+    username = msg.message.user.name
+    if HUBOT_APP.state is 2 and msg.message.user.name is HUBOT_APP.leader
+      if isFinite msg.match[1]
+        restaurant = HUBOT_APP.restaurants[msg.match[1]]
+        msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
+        HUBOT_APP.rid = "#{restaurant.id}"
+        HUBOT_APP.state = 3
+      else if msg.match[1] isnt "more"
+        msg.send "I didn't get that. Can you try telling me again?"
+    else if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
+      # User is deciding on which food to get.
+      if isFinite msg.match[1]
+        index = msg.match[1]
+        console.log index
+        HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].currentOrders[index])
+        HUBOT_APP.users[username].state = 2
+        console.log HUBOT_APP
+        msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].currentOrders[index].name}. #{username}, do you want anything else?"
 
   # Listen for orders.
   robot.respond /I want (.*)/i, (msg) ->
@@ -168,9 +176,11 @@ module.exports = (robot) ->
               return err
 
             if data?
-              msg.send "#{msg.message.user.name} did you mean: \"#{data[0].name} (Price: #{data[0].price})\"?"
-              HUBOT_APP.users[msg.message.user.name].currentOrders = data[1..]
-              HUBOT_APP.users[msg.message.user.name].pending_order = data[0]
+              orderDisplay = ''
+              for order, index in data
+                orderDisplay += "(#{index}) #{order.name} - $#{order.price}, "
+              msg.send "#{msg.message.user.name} did you mean any of these?: #{orderDisplay} tell me \"no\" if you want something else."
+              HUBOT_APP.users[msg.message.user.name].currentOrders = data
               HUBOT_APP.users[msg.message.user.name].state = 1
             else
               msg.send "Sorry I can't find anything like that. Try again."
@@ -183,10 +193,6 @@ module.exports = (robot) ->
     if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
       msg.send "Wow #{username}, you sure can eat a lot! What do you want?"
       HUBOT_APP.users[username].state = 0
-    if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
-      HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].pending_order)
-      HUBOT_APP.users[username].state = 2
-      msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].pending_order.name}. #{username}, do you want anything else?"
     else if HUBOT_APP.state is 4
       # confirm and place order
       tray = ''
@@ -223,12 +229,6 @@ module.exports = (robot) ->
       HUBOT_APP.users[username].state = 3
       msg.send "#{username}, hold on while everyone else orders!"
     else if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
-      if HUBOT_APP.users[username].currentOrders.length > 0
-        pendingOrder = HUBOT_APP.users[username].currentOrders[0]
-        HUBOT_APP.users[username].pending_order = pendingOrder
-        HUBOT_APP.users[username].currentOrders = HUBOT_APP.users[username].currentOrders[1..]
-        msg.send "How about #{pendingOrder.name} (Price: #{pendingOrder.price})?"
-      else
         msg.send "Well, #{username} what DO you want then?"
         HUBOT_APP.users[username].state = 0
     else if HUBOT_APP.state is 4
