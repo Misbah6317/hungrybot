@@ -1,6 +1,8 @@
 ordrin = require 'ordrin-api'
 request = require 'request'
 S = require 'string'
+_ = require 'underscore'
+
 ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.TEST
 
 placeOrder = (params, cb) ->
@@ -49,10 +51,13 @@ getRelevantRestaurants = (name, datetime, addr, city, zip, limit, cb) ->
       if err
         console.log err
         return cb err
+      name = name.toLowerCase()
 
       relevantRestaurants = []
       for restaurant in restaurants
-        if S(restaurant.na.toLowerCase()).contains name.toLowerCase()
+        console.log restaurant.cu
+        restContainsCuisine = name in _.map(restaurant.cu, (rest) -> rest.toLowerCase())
+        if restContainsCuisine or S(restaurant.na.toLowerCase()).contains name
           relevantRestaurants.push restaurant
         if relevantRestaurants.length > limit
           return cb null, relevantRestaurants
