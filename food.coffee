@@ -1,9 +1,21 @@
-# Description:
-#   Commands for ordering food.
+# Description
+#   A plugin for group based food ordering.
+#
+# Dependencies:
+#   "<module name>": "<module version>"
+#
+# Configuration:
+#   LIST_OF_ENV_VARS_TO_SET
 #
 # Commands:
 #   hubot start order - Start a group order.
 #   hubot start order <text> - Start a group order while filtering through available restaurants with the given text.
+#
+# Notes:
+#   See documentation at github.com/ordrin/hungrybot for examples of how to complete a group order.
+#
+# Author:
+#   ordrin
 
 _ = require 'underscore'
 orderUtils = require './orderUtils'
