@@ -31,7 +31,7 @@ placeOrder = (params, cb) ->
   ordrinApi.order_guest options, cb
 
 getRelevantMenuItems = (rid, desc, cb) ->
-  request "http://embarrassme.me:8000/TextSearch?rid=#{rid}&target=#{desc}&size=5",
+  request "http://embarrassme.me:8000/TextSearch?rid=#{rid}&target=#{desc}&size=15",
     (err, res, body) ->
       if err
         console.log err

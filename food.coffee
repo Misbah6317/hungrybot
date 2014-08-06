@@ -114,13 +114,25 @@ module.exports = (robot) ->
             restaurantsDisplay += "(#{index}) #{rest.na}, "
           msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
           HUBOT_APP.state = 2
+    else if HUBOT_APP.state is 3
+      orderDisplay = ''
+      orderLimit = HUBOT_APP.users[user].orderLimit
+      console.log HUBOT_APP.users[user].orders[orderLimit..orderLimit + 5]
+      if orderLimit + 5 < HUBOT_APP.users[user].orders.length
+        for order, index in HUBOT_APP.users[user].orders[orderLimit..orderLimit + 5]
+          if order?
+            orderDisplay += "(#{index}) #{order.name} - $#{order.price}, "
+        msg.send "#{msg.message.user.name} did you mean any of these?: #{orderDisplay} tell me \"no\" if you want something else, and \"more\" to see more options."
+        HUBOT_APP.users[user].orderLimit += 5
+      else
+        msg.send "There are no more matches for that food item. Sorry! Try again."
+        HUBOT_APP.users[msg.message.user.name].state = 0
 
   # Listen for the leader to say that everyone is in.
   robot.respond /done$/i, (msg) ->
     user = msg.message.user.name
     if user is HUBOT_APP.leader and HUBOT_APP.state is 3
       userString = ''
-      console.log HUBOT_APP.users
       _.each HUBOT_APP.users, (user, name) ->
         for order in user.orders
           console.log name
@@ -155,7 +167,6 @@ module.exports = (robot) ->
             console.log index
             HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].currentOrders[index])
             HUBOT_APP.users[username].state = 2
-            console.log HUBOT_APP
             msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].currentOrders[index].name}. #{username}, do you want anything else?"
 
   # Listen for orders.
@@ -178,13 +189,17 @@ module.exports = (robot) ->
               msg.send "Sorry I can't find anything like that."
               return err
 
-            if data?
+            if data.length > 0
+              console.log data.length
               orderDisplay = ''
               for order, index in data
                 orderDisplay += "(#{index}) #{order.name} - $#{order.price}, "
-              msg.send "#{msg.message.user.name} did you mean any of these?: #{orderDisplay} tell me \"no\" if you want something else."
+                if index > 4
+                  break
+              msg.send "#{msg.message.user.name} did you mean any of these?: #{orderDisplay} tell me \"no\" if you want something else, and \"more\" to see more options."
               HUBOT_APP.users[msg.message.user.name].currentOrders = data
               HUBOT_APP.users[msg.message.user.name].state = 1
+              HUBOT_APP.users[msg.message.user.name].orderLimit = 5
             else
               msg.send "Sorry I can't find anything like that. Try again."
         )
