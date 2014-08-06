@@ -266,7 +266,11 @@ module.exports = (robot) ->
       msg.send "It's all good. I'll keep listening for orders!"
       HUBOT_APP.state = 3
 
-  robot.respond /show orders/i, (msg) ->
-    for user, name in HUBOT_APP.users
+  robot.respond /show orders$/i, (msg) ->
+    orderDisplay = ''
+    for name in _.keys(HUBOT_APP.users)
+      user = HUBOT_APP.users[name]
+      console.log user
       for order in user.orders
-        msg.send "#{name}: #{order.name}\n"
+        orderDisplay += "#{name}: #{order.name}\n"
+    msg.send orderDisplay
