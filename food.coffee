@@ -43,6 +43,7 @@ module.exports = (robot) ->
   robot.error (err, msg) ->
     console.log err
     if msg?
+      console.log err.stack
       console.log msg
       msg.send "Something bad happened! #{err}"
 
@@ -145,15 +146,17 @@ module.exports = (robot) ->
         HUBOT_APP.state = 3
       else if msg.match[1] isnt "more"
         msg.send "I didn't get that. Can you try telling me again?"
-    else if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
+    else if HUBOT_APP.state is 3
       # User is deciding on which food to get.
-      if isFinite msg.match[1]
-        index = msg.match[1]
-        console.log index
-        HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].currentOrders[index])
-        HUBOT_APP.users[username].state = 2
-        console.log HUBOT_APP
-        msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].currentOrders[index].name}. #{username}, do you want anything else?"
+      if HUBOT_APP.users[username]?
+        if HUBOT_APP.users[username].state is 1
+          if isFinite msg.match[1]
+            index = msg.match[1]
+            console.log index
+            HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].currentOrders[index])
+            HUBOT_APP.users[username].state = 2
+            console.log HUBOT_APP
+            msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].currentOrders[index].name}. #{username}, do you want anything else?"
 
   # Listen for orders.
   robot.respond /I want (.*)/i, (msg) ->
@@ -193,7 +196,7 @@ module.exports = (robot) ->
     if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
       msg.send "Wow #{username}, you sure can eat a lot! What do you want?"
       HUBOT_APP.users[username].state = 0
-    else if HUBOT_APP.state is 4
+    else if HUBOT_APP.state is 4 and username is HUBOT_APP.leader
       # confirm and place order
       tray = ''
       _.each HUBOT_APP.users, (user) ->
@@ -235,7 +238,7 @@ module.exports = (robot) ->
       msg.send "It's all good. I'll keep listening for orders!"
       HUBOT_APP.state = 3
 
-  # Print current orders
-  robot.respond /ls/i, (msg) ->
-    for user in HUBOT_APP.users
-      msg.send "" + user + " is getting " + HUBOT_APP.users[user].order.name
+  robot.respond /show orders/i, (msg) ->
+    for user, name in HUBOT_APP.users
+      for order in user.orders
+        msg.send "#{name}: #{order.name}\n"
