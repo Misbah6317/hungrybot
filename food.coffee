@@ -50,6 +50,7 @@ module.exports = (robot) ->
   # Listen for the start of an order.
   robot.respond /start order(.*)$/i, (msg) ->
     if HUBOT_APP.state is 1
+      # A group order has been started
       leader = msg.message.user.name
       HUBOT_APP.leader = leader
       HUBOT_APP.users[leader] = {}
@@ -58,6 +59,7 @@ module.exports = (robot) ->
       msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order. Wait while I find some cool nearby restaurants."
 
       if msg.match[1].trim() isnt ''
+        # A cuisine type or restaurant name was selected.
         HUBOT_APP.keywordString = msg.match[1].trim()
         orderUtils.getRelevantRestaurants msg.match[1].trim(), "ASAP", address, city, zip, 5, (err, data) ->
           if err
@@ -74,6 +76,7 @@ module.exports = (robot) ->
           HUBOT_APP.filtered = true
           HUBOT_APP.state = 2
       else
+        # No particular restaurant or cuisine type was selected.
         orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
           if err
             msg.send err
@@ -86,13 +89,14 @@ module.exports = (robot) ->
           msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
           HUBOT_APP.state = 2
 
-  # Listen for the leader to ask for more restaurants.
   robot.respond /more$/i, (msg) ->
     user = msg.message.user.name
     if user is HUBOT_APP.leader and HUBOT_APP.state is 2
+      # Listen for the leader to ask for more restaurants.
       msg.send "Alright let me find more restaurants."
       HUBOT_APP.restaurantLimit += 5
       if HUBOT_APP.filtered
+        # A cuisine/restaurant filter was entered.
         orderUtils.getRelevantRestaurants HUBOT_APP.keywordString, "ASAP", address, city, zip, HUBOT_APP.restaurantLimit, (err, data) ->
           if err
             msg.send err
@@ -104,6 +108,7 @@ module.exports = (robot) ->
           msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
           HUBOT_APP.state = 2
       else
+        # No cuisine/restaurant filter was entered.
         orderUtils.getUniqueList "ASAP", address, city, zip, HUBOT_APP.restaurantLimit, (err, data) ->
           if err
             msg.send err
@@ -115,6 +120,7 @@ module.exports = (robot) ->
           msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
           HUBOT_APP.state = 2
     else if HUBOT_APP.state is 3
+      # A user asked for more item selections.
       orderDisplay = ''
       orderLimit = HUBOT_APP.users[user].orderLimit
       console.log HUBOT_APP.users[user].orders[orderLimit..orderLimit + 5]
@@ -151,6 +157,7 @@ module.exports = (robot) ->
   robot.respond /(.*)/i, (msg) ->
     username = msg.message.user.name
     if HUBOT_APP.state is 2 and msg.message.user.name is HUBOT_APP.leader
+      # The leader is choosing a restaurant from the given choices.
       if isFinite msg.match[1]
         restaurant = HUBOT_APP.restaurants[msg.match[1]]
         msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
@@ -172,8 +179,10 @@ module.exports = (robot) ->
   # Listen for orders.
   robot.respond /I want (.*)/i, (msg) ->
     if HUBOT_APP.state is 3
+      # A user is asking for a specific type of food.
       user = msg.message.user.name
       if user isnt HUBOT_APP.leader and user not in _.keys(HUBOT_APP.users)
+        # This user is just joining the order.
         HUBOT_APP.users[user] = {}
         HUBOT_APP.users[user].state = 0
         HUBOT_APP.users[user].orders = []
@@ -209,6 +218,7 @@ module.exports = (robot) ->
     username = msg.message.user.name
 
     if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
+      # The user wants more food.
       msg.send "Wow #{username}, you sure can eat a lot! What do you want?"
       HUBOT_APP.users[username].state = 0
     else if HUBOT_APP.state is 4 and username is HUBOT_APP.leader
@@ -244,12 +254,15 @@ module.exports = (robot) ->
     username = msg.message.user.name
 
     if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
+      # This user is finished ordering.
       HUBOT_APP.users[username].state = 3
       msg.send "#{username}, hold on while everyone else orders!"
     else if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
-        msg.send "Well, #{username} what DO you want then?"
-        HUBOT_APP.users[username].state = 0
+      # This user does not want any of the suggested items.
+      msg.send "Well, #{username} what DO you want then?"
+      HUBOT_APP.users[username].state = 0
     else if HUBOT_APP.state is 4
+      # The order is not finished yet.
       msg.send "It's all good. I'll keep listening for orders!"
       HUBOT_APP.state = 3
 
