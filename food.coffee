@@ -32,7 +32,7 @@ lastName = process.env.HUBOT_ORDRIN_LAST_NAME
 module.exports = (robot) ->
 
   HUBOT_APP = {}
-  HUBOT_APP.state = 1 #1-listening, 2-Selecting a restaurant 3-gathering orders 4-verify order
+  HUBOT_APP.state = 1 #1-listening, 2-Selecting a restaurant 3-gathering orders 4-verify order 5-Placing order
   HUBOT_APP.rid = ""
   HUBOT_APP.users = {} #user state 0 - waiting for order, 1 - waiting for confirmation, 2 - waiting for new request confirmation, 3 - complete
   HUBOT_APP.leader = ''
@@ -221,7 +221,27 @@ module.exports = (robot) ->
       # The user wants more food.
       msg.send "Wow #{username}, you sure can eat a lot! What do you want?"
       HUBOT_APP.users[username].state = 0
-    else if HUBOT_APP.state is 4 and username is HUBOT_APP.leader
+
+  # Listen for confirmation
+  robot.respond /no/i, (msg) ->
+    username = msg.message.user.name
+
+    if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
+      # This user is finished ordering.
+      HUBOT_APP.users[username].state = 3
+      msg.send "#{username}, hold on while everyone else orders!"
+    else if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
+      # This user does not want any of the suggested items.
+      msg.send "Well, #{username} what DO you want then?"
+      HUBOT_APP.users[username].state = 0
+    else if HUBOT_APP.state is 4
+      # The order is not finished yet.
+      msg.send "It's all good. I'll keep listening for orders!"
+      HUBOT_APP.state = 3
+
+  robot.respond /place order/i, (msg) ->
+    username = msg.message.user.name
+    if HUBOT_APP.state is 4 and username is HUBOT_APP.leader
       # confirm and place order
       tray = ''
       _.each HUBOT_APP.users, (user) ->
@@ -240,6 +260,8 @@ module.exports = (robot) ->
         zip: zip
         tray: tray.substring(1)
 
+      msg.send "Placing order. Please wait for me to confirm that everything was correct."
+      HUBOT_APP.state = 5
       orderUtils.placeOrder params, (err, data) ->
         if err
           console.log err
@@ -248,23 +270,6 @@ module.exports = (robot) ->
           return err
         msg.send "Order placed: #{data.msg}"
         HUBOT_APP.state = 1
-
-  # Listen for confirmation
-  robot.respond /no/i, (msg) ->
-    username = msg.message.user.name
-
-    if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
-      # This user is finished ordering.
-      HUBOT_APP.users[username].state = 3
-      msg.send "#{username}, hold on while everyone else orders!"
-    else if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
-      # This user does not want any of the suggested items.
-      msg.send "Well, #{username} what DO you want then?"
-      HUBOT_APP.users[username].state = 0
-    else if HUBOT_APP.state is 4
-      # The order is not finished yet.
-      msg.send "It's all good. I'll keep listening for orders!"
-      HUBOT_APP.state = 3
 
   robot.respond /show orders$/i, (msg) ->
     orderDisplay = ''
