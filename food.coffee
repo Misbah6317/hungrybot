@@ -123,11 +123,10 @@ module.exports = (robot) ->
       # A user asked for more item selections.
       orderDisplay = ''
       orderLimit = HUBOT_APP.users[user].orderLimit
-      console.log HUBOT_APP.users[user].orders[orderLimit..orderLimit + 5]
-      if orderLimit + 5 < HUBOT_APP.users[user].orders.length
-        for order, index in HUBOT_APP.users[user].orders[orderLimit..orderLimit + 5]
+      if orderLimit + 5 < HUBOT_APP.users[user].currentOrders.length
+        for order, index in HUBOT_APP.users[user].currentOrders[orderLimit + 1..orderLimit + 5]
           if order?
-            orderDisplay += "(#{index}) #{order.name} - $#{order.price}, "
+            orderDisplay += "(#{orderLimit + 1 + index}) #{order.name} - $#{order.price}, "
         msg.send "#{msg.message.user.name} did you mean any of these?: #{orderDisplay} tell me \"no\" if you want something else, and \"more\" to see more options."
         HUBOT_APP.users[user].orderLimit += 5
       else
@@ -197,6 +196,7 @@ module.exports = (robot) ->
               console.log err
               msg.send "Sorry I can't find anything like that."
               return err
+            console.log data.length
 
             if data.length > 0
               console.log data.length
@@ -272,5 +272,5 @@ module.exports = (robot) ->
       user = HUBOT_APP.users[name]
       console.log user
       for order in user.orders
-        orderDisplay += "#{name}: #{order.name}\n"
+        orderDisplay += "#{name}: #{order.name} - #{order.price}\n"
     msg.send orderDisplay
