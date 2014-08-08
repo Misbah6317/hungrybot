@@ -17,7 +17,7 @@ async.waterfall [
         last_name: result.lastName,
         (err, data) ->
           console.log "User #{result.email} created"
-          asyncCb(result);
+          asyncCb(null, result);
       )
   (createAccount, asyncCb) ->
     prompt.get ['address', 'city', 'state', 'zip', 'phone'], (err, result) ->
@@ -34,13 +34,13 @@ async.waterfall [
           if err
             asyncCb err
           console.log 'Address created'
-          asyncCb(result);
+          asyncCb(null, result);
       )
   (createAccount, createAddress, asyncCb) ->
     prompt.get ['cardNumber', 'cardCvc', 'cardExpirationDate', 'billingAddress', 'billingCity', 'billingState', 'billingZipCode', 'billingPhoneNumber'], (err, result) ->
       ordrinApi.create_cc(
-        email: email
-        current_password: password
+        email: createAccount.email
+        current_password: createAccount.password
         nick: 'groupCard'
         card_number: result.cardNumber
         card_cvc: result.cardCvc
@@ -59,5 +59,6 @@ async.waterfall [
 ], (err, result) ->
   if err
     console.log "An error has occured"
+    console.log err
     return
   console.log "Be sure to read the documentation to determine which environment variables you need to save."
