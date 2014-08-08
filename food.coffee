@@ -155,10 +155,15 @@ module.exports = (robot) ->
   # Listen for the leader to choose a restaurant.
   robot.respond /(.*)/i, (msg) ->
     username = msg.message.user.name
-    if HUBOT_APP.state is 2 and msg.message.user.name is HUBOT_APP.leader
+    message = msg.match[1]
+    if not isFinite message
+      msgArray = message.split(' ')
+      message = msgArray[msgArray.length - 1]
+
+    if HUBOT_APP.state is 2 and username is HUBOT_APP.leader
       # The leader is choosing a restaurant from the given choices.
-      if isFinite msg.match[1]
-        restaurant = HUBOT_APP.restaurants[msg.match[1]]
+      if isFinite message
+        restaurant = HUBOT_APP.restaurants[message]
         msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
         HUBOT_APP.rid = "#{restaurant.id}"
         HUBOT_APP.state = 3
@@ -168,8 +173,8 @@ module.exports = (robot) ->
       # User is deciding on which food to get.
       if HUBOT_APP.users[username]?
         if HUBOT_APP.users[username].state is 1
-          if isFinite msg.match[1]
-            index = msg.match[1]
+          if isFinite message
+            index = message
             console.log index
             HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].currentOrders[index])
             HUBOT_APP.users[username].state = 2
@@ -177,6 +182,9 @@ module.exports = (robot) ->
 
   # Listen for orders.
   robot.respond /I want (.*)/i, (msg) ->
+    if isFinite msg.match[1]
+      return
+
     if HUBOT_APP.state is 3
       # A user is asking for a specific type of food.
       user = msg.message.user.name
