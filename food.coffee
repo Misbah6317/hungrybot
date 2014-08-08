@@ -20,24 +20,19 @@
 _ = require 'underscore'
 orderUtils = require './orderUtils'
 
-address = process.env.HUBOT_ADDRESS
-city = process.env.HUBOT_CITY
-state = process.env.HUBOT_STATE
-zip = process.env.HUBOT_ZIP
-phone = process.env.HUBOT_ORDRIN_PHONE
-email = process.env.HUBOT_ORDRIN_EMAIL
-firstName = process.env.HUBOT_ORDRIN_FIRST_NAME
-lastName = process.env.HUBOT_ORDRIN_LAST_NAME
-
 module.exports = (robot) ->
 
   HUBOT_APP = {}
   HUBOT_APP.state = 1 #1-listening, 2-Selecting a restaurant 3-gathering orders 4-verify order 5-Placing order
-  HUBOT_APP.rid = ""
-  HUBOT_APP.users = {} #user state 0 - waiting for order, 1 - waiting for confirmation, 2 - waiting for new request confirmation, 3 - complete
-  HUBOT_APP.leader = ''
-  HUBOT_APP.restaurants = []
-  HUBOT_APP.restaurantLimit = 5
+
+  initialize = () ->
+    # Set the HUBOT_APP to its initial state
+    HUBOT_APP.state = 1 #1-listening, 2-Selecting a restaurant 3-gathering orders 4-verify order 5-Placing order
+    HUBOT_APP.rid = ""
+    HUBOT_APP.users = {} #user state 0 - waiting for order, 1 - waiting for confirmation, 2 - waiting for new request confirmation, 3 - complete
+    HUBOT_APP.leader = ''
+    HUBOT_APP.restaurants = []
+    HUBOT_APP.restaurantLimit = 5
 
   # What to do in case of an emergency.
   robot.error (err, msg) ->
@@ -51,6 +46,7 @@ module.exports = (robot) ->
   robot.respond /start order(.*)$/i, (msg) ->
     if HUBOT_APP.state is 1
       # A group order has been started
+      initialize()
       leader = msg.message.user.name
       HUBOT_APP.leader = leader
       HUBOT_APP.users[leader] = {}
@@ -142,7 +138,7 @@ module.exports = (robot) ->
         for order in user.orders
           console.log name
           userString += "#{name}: #{order.name}\n"
-      msg.send "Awesome! Lets place this order. Here is what everyone wants:\n #{userString}\nIs this correct?"
+      msg.send "Awesome! Lets place this order. Here is what everyone wants:\n #{userString}\nIs this correct? #{leader} tell me \"place order\" when you are ready, and \"no\" if you wish to keep ordering."
       HUBOT_APP.state = 4
 
   # Listen for users who want to be removed from the order.
@@ -258,14 +254,6 @@ module.exports = (robot) ->
 
       params =
         rid: HUBOT_APP.rid
-        email: email
-        first_name: firstName
-        last_name: lastName
-        phone: phone
-        addr: address
-        city: city
-        state: state
-        zip: zip
         tray: tray.substring(1)
 
       msg.send "Placing order. Please wait for me to confirm that everything was correct."
