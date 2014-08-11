@@ -19,6 +19,7 @@
 
 _ = require 'underscore'
 orderUtils = require './orderUtils'
+localize = require './localize'
 
 module.exports = (robot) ->
 
@@ -286,14 +287,9 @@ module.exports = (robot) ->
       msg.send orderDisplay
 
   # Map listeners to functions.
-  robot.error responseHandlers.error
-  robot.respond /start order(.*)$/i, responseHandlers.startOrder
-  robot.respond /more$/i, responseHandlers.more
-  robot.respond /done$/i, responseHandlers.finishOrder
-  robot.respond /I'm out$/i, responseHandlers.exitOrder
-  robot.respond /(.*)/i, responseHandlers.select
-  robot.respond /I want (.*)/i, responseHandlers.queryMenuItem
-  robot.respond /yes/i, responseHandlers.confirm
-  robot.respond /no/i, responseHandlers.decline
-  robot.respond /place order/i, responseHandlers.placeOrder
-  robot.respond /show orders$/i, responseHandlers.displayOrders
+  mapHandlersToListeners = () ->
+    _.each local.listeners, (expressions, name) ->
+      for regex in expressions
+        robot.respond regex, responseHandlers[name]
+
+  mapHandlersToListeners()
