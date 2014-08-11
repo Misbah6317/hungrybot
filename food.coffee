@@ -163,17 +163,27 @@ module.exports = (robot) ->
       if HUBOT_APP.state is 2 and username is HUBOT_APP.leader
         # The leader is choosing a restaurant from the given choices.
         if isFinite message
-          restaurant = HUBOT_APP.restaurants[message]
-          msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
-          HUBOT_APP.rid = "#{restaurant.id}"
-          HUBOT_APP.state = 3
+         restaurant = HUBOT_APP.restaurants[message]
         else if msg.match[1] in _.pluck HUBOT_APP.restaurants, 'na'
-          restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
-          msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
+         restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
+        else if message isnt "more"
+         msg.send "I didn't get that. Can you try telling me again?"
+
+        if restaurant
+          cuisine_text = "They have "
+
+          if restaurant.cuisine.length === 1
+            cuisine_text += restaurant.cuisine[0] + " food."
+          else if restaurant.cuisine.length === 2
+            cuisine_text += restaurant.cuisine[0] + " and " + restaurant.cuisine[1] + " food."
+          else if restaurant.cuisine.length > 2
+            restaurant.cuisine[restaurant.cuisine.length-1] = "and " + restaurant.cuisine[restaurant.cuisine.length-1]
+            cuisine_text += _.reduce(tmp, function(memo, item) { return memo + ", " + item; }) + " food.";
+
+          msg.send "Alright lets order from #{restaurant.na}! #{cuisine_text} Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
           HUBOT_APP.rid = "#{restaurant.id}"
           HUBOT_APP.state = 3
-        else if message isnt "more"
-          msg.send "I didn't get that. Can you try telling me again?"
+
       else if HUBOT_APP.state is 3
         # User is deciding on which food to get.
         if HUBOT_APP.users[username]?
@@ -184,7 +194,7 @@ module.exports = (robot) ->
               HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].currentOrders[index])
               HUBOT_APP.users[username].state = 2
               msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].currentOrders[index].name}. #{username}, do you want anything else?"
-
+     
     # Listen for orders.
     queryMenuItem: (msg) ->
       if isFinite msg.match[1]
