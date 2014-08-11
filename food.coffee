@@ -156,6 +156,8 @@ module.exports = (robot) ->
       msgArray = message.split(' ')
       message = msgArray[msgArray.length - 1]
 
+    console.log _.pluck HUBOT_APP.restaurants, 'na'
+    console.log message
     if HUBOT_APP.state is 2 and username is HUBOT_APP.leader
       # The leader is choosing a restaurant from the given choices.
       if isFinite message
@@ -163,7 +165,12 @@ module.exports = (robot) ->
         msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
         HUBOT_APP.rid = "#{restaurant.id}"
         HUBOT_APP.state = 3
-      else if msg.match[1] isnt "more"
+      else if msg.match[1] in _.pluck HUBOT_APP.restaurants, 'na'
+        restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
+        msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
+        HUBOT_APP.rid = "#{restaurant.id}"
+        HUBOT_APP.state = 3
+      else if message isnt "more"
         msg.send "I didn't get that. Can you try telling me again?"
     else if HUBOT_APP.state is 3
       # User is deciding on which food to get.
