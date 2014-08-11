@@ -18,8 +18,8 @@
 #   ordrin
 
 _ = require 'underscore'
-orderUtils = require './orderUtils'
-localize = require './localize'
+orderUtils = require '../orderUtils'
+local = require '../local'
 
 module.exports = (robot) ->
 
@@ -164,22 +164,25 @@ module.exports = (robot) ->
       if HUBOT_APP.state is 2 and username is HUBOT_APP.leader
         # The leader is choosing a restaurant from the given choices.
         if isFinite message
-         restaurant = HUBOT_APP.restaurants[message]
+          restaurant = HUBOT_APP.restaurants[message]
         else if msg.match[1] in _.pluck HUBOT_APP.restaurants, 'na'
-         restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
+          restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
         else if message isnt "more"
-         msg.send "I didn't get that. Can you try telling me again?"
+          msg.send "I didn't get that. Can you try telling me again?"
 
         if restaurant
-          cuisine_text = "They have "
+          cuisine_text = "They serve "
 
-          if restaurant.cuisine.length === 1
-            cuisine_text += restaurant.cuisine[0] + " food."
-          else if restaurant.cuisine.length === 2
-            cuisine_text += restaurant.cuisine[0] + " and " + restaurant.cuisine[1] + " food."
-          else if restaurant.cuisine.length > 2
-            restaurant.cuisine[restaurant.cuisine.length-1] = "and " + restaurant.cuisine[restaurant.cuisine.length-1]
-            cuisine_text += _.reduce(tmp, function(memo, item) { return memo + ", " + item; }) + " food.";
+          if !restaurant.cu
+            cuisine_text = ""
+          else if restaurant.cu.length is 1
+            cuisine_text += restaurant.cu[0] + "."
+          else if restaurant.cu.length is 2
+            cuisine_text += restaurant.cu[0] + " and " + restaurant.cu[1] + "."
+          else if restaurant.cu.length > 2
+            restaurant.cu[restaurant.cu.length-1] = "and " + restaurant.cu[restaurant.cu.length-1]
+            cuisine_text += _.reduce(restaurant.cu, (memo, item) -> return memo + ", " + item)
+            cuisine_text += "."
 
           msg.send "Alright lets order from #{restaurant.na}! #{cuisine_text} Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
           HUBOT_APP.rid = "#{restaurant.id}"
