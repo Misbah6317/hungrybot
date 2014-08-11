@@ -73,7 +73,7 @@ module.exports = (robot) ->
           HUBOT_APP.state = 2
       else
         # No particular restaurant or cuisine type was selected.
-        orderUtils.getUniqueList "ASAP", address, city, zip, 5, (err, data) ->
+        orderUtils.getUniqueList 5, (err, data) ->
           if err
             msg.send err
             return err
@@ -138,7 +138,7 @@ module.exports = (robot) ->
         for order in user.orders
           console.log name
           userString += "#{name}: #{order.name}\n"
-      msg.send "Awesome! Lets place this order. Here is what everyone wants:\n #{userString}\nIs this correct? #{leader} tell me \"place order\" when you are ready, and \"no\" if you wish to keep ordering."
+      msg.send "Awesome! Lets place this order. Here is what everyone wants:\n #{userString}\nIs this correct? #{HUBOT_APP.leader} tell me \"place order\" when you are ready, and \"no\" if you wish to keep ordering."
       HUBOT_APP.state = 4
 
   # Listen for users who want to be removed from the order.

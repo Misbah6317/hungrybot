@@ -34,7 +34,7 @@ async.waterfall [
           if err
             asyncCb err
           console.log 'Address created'
-          asyncCb(null, result);
+          asyncCb(null, createAccount, result);
       )
   (createAccount, createAddress, asyncCb) ->
     prompt.get ['cardNumber', 'cardCvc', 'cardExpirationDate', 'billingAddress', 'billingCity', 'billingState', 'billingZipCode', 'billingPhoneNumber'], (err, result) ->
