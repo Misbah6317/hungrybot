@@ -22,9 +22,11 @@ orderUtils = require './orderUtils'
 
 module.exports = (robot) ->
 
+  # A "global" variable containing the state information of the current order.
   HUBOT_APP = {}
   HUBOT_APP.state = 1 #1-listening, 2-Selecting a restaurant 3-gathering orders 4-verify order 5-Placing order
 
+  # Set the initial state of the order.
   initialize = () ->
     # Set the HUBOT_APP to its initial state
     HUBOT_APP.state = 1 #1-listening, 2-Selecting a restaurant 3-gathering orders 4-verify order 5-Placing order
@@ -34,8 +36,8 @@ module.exports = (robot) ->
     HUBOT_APP.restaurants = []
     HUBOT_APP.restaurantLimit = 5
 
-  # What to do in case of an emergency.
-  robot.error (err, msg) ->
+  # Handles any uncaught exceptions.
+  error = (err, msg) ->
     console.log err
     if msg?
       console.log err.stack
@@ -43,7 +45,7 @@ module.exports = (robot) ->
       msg.send "Something bad happened! #{err}"
 
   # Listen for the start of an order.
-  robot.respond /start order(.*)$/i, (msg) ->
+  startOrder = (msg) ->
     if HUBOT_APP.state is 1
       # A group order has been started
       initialize()
@@ -85,7 +87,8 @@ module.exports = (robot) ->
           msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
           HUBOT_APP.state = 2
 
-  robot.respond /more$/i, (msg) ->
+  # Displays more options for restaurant or item selection.
+  more = (msg) ->
     user = msg.message.user.name
     if user is HUBOT_APP.leader and HUBOT_APP.state is 2
       # Listen for the leader to ask for more restaurants.
@@ -130,7 +133,7 @@ module.exports = (robot) ->
         HUBOT_APP.users[msg.message.user.name].state = 0
 
   # Listen for the leader to say that everyone is in.
-  robot.respond /done$/i, (msg) ->
+  finishOrder = (msg) ->
     user = msg.message.user.name
     if user is HUBOT_APP.leader and HUBOT_APP.state is 3
       userString = ''
@@ -142,22 +145,20 @@ module.exports = (robot) ->
       HUBOT_APP.state = 4
 
   # Listen for users who want to be removed from the order.
-  robot.respond /I'm out$/i, (msg) ->
+  exitOrder = (msg) ->
     user = msg.message.user.name
     if user isnt HUBOT_APP.leader
       HUBOT_APP.users = _.filter HUBOT_APP.users, (userInOrder) -> userInOrder isnt user
       msg.send "I'm sorry to hear that. Looks like #{user} doesn't want to get food with us."
 
-  # Listen for the leader to choose a restaurant.
-  robot.respond /(.*)/i, (msg) ->
+  # Listen for the leader to choose a restaurant, or for a user to select a menu item.
+  select = (msg) ->
     username = msg.message.user.name
     message = msg.match[1]
     if not isFinite message
       msgArray = message.split(' ')
       message = msgArray[msgArray.length - 1]
 
-    console.log _.pluck HUBOT_APP.restaurants, 'na'
-    console.log message
     if HUBOT_APP.state is 2 and username is HUBOT_APP.leader
       # The leader is choosing a restaurant from the given choices.
       if isFinite message
@@ -184,7 +185,7 @@ module.exports = (robot) ->
             msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].currentOrders[index].name}. #{username}, do you want anything else?"
 
   # Listen for orders.
-  robot.respond /I want (.*)/i, (msg) ->
+  queryMenuItem = (msg) ->
     if isFinite msg.match[1]
       return
 
@@ -225,18 +226,16 @@ module.exports = (robot) ->
         )
 
   # Listen for confirmation
-  robot.respond /yes/i, (msg) ->
+  confirm = (msg) ->
     username = msg.message.user.name
-
     if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
       # The user wants more food.
       msg.send "Wow #{username}, you sure can eat a lot! What do you want?"
       HUBOT_APP.users[username].state = 0
 
   # Listen for confirmation
-  robot.respond /no/i, (msg) ->
+  decline = (msg) ->
     username = msg.message.user.name
-
     if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
       # This user is finished ordering.
       HUBOT_APP.users[username].state = 3
@@ -250,7 +249,8 @@ module.exports = (robot) ->
       msg.send "It's all good. I'll keep listening for orders!"
       HUBOT_APP.state = 3
 
-  robot.respond /place order/i, (msg) ->
+  # Everything is finished, and the order can be placed.
+  placeOrder = (msg) ->
     username = msg.message.user.name
     if HUBOT_APP.state is 4 and username is HUBOT_APP.leader
       # confirm and place order
@@ -274,7 +274,8 @@ module.exports = (robot) ->
         msg.send "Order placed: #{data.msg}"
         HUBOT_APP.state = 1
 
-  robot.respond /show orders$/i, (msg) ->
+  # Display orders for each user.
+  displayOrders = (msg) ->
     orderDisplay = ''
     for name in _.keys(HUBOT_APP.users)
       user = HUBOT_APP.users[name]
@@ -282,3 +283,16 @@ module.exports = (robot) ->
       for order in user.orders
         orderDisplay += "#{name}: #{order.name} - #{order.price}\n"
     msg.send orderDisplay
+
+  # Map listeners to functions.
+  robot.error error
+  robot.respond /start order(.*)$/i, startOrder
+  robot.respond /more$/i, more
+  robot.respond /done$/i, finishOrder
+  robot.respond /I'm out$/i, exitOrder
+  robot.respond /(.*)/i, select
+  robot.respond /I want (.*)/i, queryMenuItem
+  robot.respond /yes/i, confirm
+  robot.respond /no/i, decline
+  robot.respond /place order/i, placeOrder
+  robot.respond /show orders$/i, displayOrders
