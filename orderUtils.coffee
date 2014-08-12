@@ -7,7 +7,7 @@ password = process.env.HUBOT_ORDRIN_PASSWORD
 firstName = process.env.HUBOT_ORDRIN_FIRST_NAME
 lastName = process.env.HUBOT_ORDRIN_LAST_NAME
 
-ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.TEST
+ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.PRODUCTION
 
 placeOrder = (params, cb) ->
   options =
@@ -33,12 +33,15 @@ getRelevantMenuItems = (rid, desc, cb) ->
 
       cb null, JSON.parse(body)
 
-getRelevantRestaurants = (limit, cb) ->
+getRelevantRestaurants = (name, limit, cb) ->
   ordrinApi.get_saved_addr
     email: email
     current_password: password
     nick: 'groupLocation',
     (err, result) ->
+      if err
+        console.log err
+        return err
       ordrinApi.delivery_list(
         datetime: 'ASAP'
         addr: result.addr
@@ -69,6 +72,10 @@ getUniqueList = (size, cb) ->
     current_password: password
     nick: 'groupLocation',
     (err, result) ->
+      if err
+        console.log err
+        console.log err.stack
+        return err
       ordrinApi.delivery_list(
         datetime: 'ASAP'
         addr: result.addr
