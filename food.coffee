@@ -251,6 +251,43 @@ module.exports = (robot) ->
                 msg.send local.getResponse 'noMatches', {}
           )
 
+    # Listen for orders.
+    randomItem: (msg) ->
+      if HUBOT_APP.state is 3
+        # A user is asking for a specific type of food.
+        user = msg.message.user.name
+        if user isnt HUBOT_APP.leader and user not in _.keys(HUBOT_APP.users)
+          # This user is just joining the order.
+          HUBOT_APP.users[user] = {}
+          HUBOT_APP.users[user].state = 0
+          HUBOT_APP.users[user].orders = []
+          msg.send local.getResponse('joinOrder', user: user)
+
+        if HUBOT_APP.users[user].state in [0, 1, 2]
+
+          orderUtils.getRelevantMenuItems(HUBOT_APP.rid, '',
+            (err, data) ->
+              if err
+                console.log err
+                msg.send local.getResponse 'noMatches', {}
+                return err
+
+              if data.length > 0
+                orderDisplay = ''
+                for order, index in data
+                  orderDisplay += "(#{index}) #{order.name} - $#{order.price}, "
+                  if index > 4
+                    break
+                msg.send local.getResponse 'confirmOrder',
+                  user: user,
+                  orderDisplay: orderDisplay
+                HUBOT_APP.users[msg.message.user.name].currentOrders = data
+                HUBOT_APP.users[msg.message.user.name].state = 1
+                HUBOT_APP.users[msg.message.user.name].orderLimit = 5
+              else
+                msg.send local.getResponse 'noMatches', {}
+          )
+
     # Listen for confirmation
     confirm: (msg) ->
       username = msg.message.user.name

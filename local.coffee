@@ -6,6 +6,7 @@ listeners =
   exitOrder: [/I'm out$/i]
   select: [/(.*)/i]
   queryMenuItem: [/I want (.*)/i]
+  randomItem: [/suggest something/i]
   confirm: [/yes/i]
   decline: [/no/i]
   placeOrder: [/place order/i]
@@ -20,7 +21,7 @@ getResponse = (response, params) ->
     noRestaurants: "There were no restaurants that fit that description. Try again."
     chooseRestaurant: "Tell me a restaurant to choose from: #{params.restaurantsDisplay} (say \"more\" to see more restaurants)"
     findMoreRestaurants: "Alright let me find more restaurants."
-    confirmOrder: "#{params.user} did you mean any of these?: #{params.orderDisplay} tell me \"no\" if you want something else, and \"more\" to see more options."
+    confirmOrder: "#{params.user} how about any of these?: #{params.orderDisplay} tell me \"no\" if you want something else, and \"more\" to see more options."
     noMatches: "There are no more matches for that item. Sorry! Try again."
     finishOrder: "Awesome! Lets place this order. Here is what everyone wants:\n #{params.userString}\nIs this correct? #{params.leader} tell me \"place order\" when you are ready, and \"no\" if you wish to keep ordering."
     exitOrder: "I'm sorry to hear that. Looks like #{params.user} doesn't want to get food with us."
