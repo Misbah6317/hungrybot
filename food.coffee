@@ -169,25 +169,41 @@ module.exports = (robot) ->
         # The leader is choosing a restaurant from the given choices.
         if isFinite message
           restaurant = HUBOT_APP.restaurants[message]
-          msg.send local.getResponse 'restaurantSelected',
-            restaurantName: restaurant.na,
-            leader: HUBOT_APP.leader
-          HUBOT_APP.rid = "#{restaurant.id}"
-          HUBOT_APP.state = 3
         else if msg.match[1] in _.pluck HUBOT_APP.restaurants, 'na'
           restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
+        else if message isnt "more"
+          msg.send "I didn't get that. Can you try telling me again?"
+
+        if restaurant?
+          console.log "FFDSFDFSDFDSFDSFDSFDSFDSFDSFDSFDSFDSFDSFDSFDSFDSFS"
+          console.log restaurant
+          cuisineText = "They serve "
+
+          if not restaurant.cu?
+            cuisineText = ""
+          else if restaurant.cu.length is 1
+            cuisineText += restaurant.cu[0] + "."
+          else if restaurant.cu.length is 2
+            cuisineText += restaurant.cu[0] + " and " + restaurant.cu[1] + "."
+          else if restaurant.cu.length > 2
+            restaurant.cu[restaurant.cu.length-1] = "and " + restaurant.cu[restaurant.cu.length-1]
+            cuisineText += _.reduce(restaurant.cu, (memo, item) -> return memo + ", " + item)
+            cuisineText += "."
+
+          console.log cuisineText
           msg.send local.getResponse 'restaurantSelected',
             restaurantName: restaurant.na,
             leader: HUBOT_APP.leader
+            cuisineText: cuisineText
           HUBOT_APP.rid = "#{restaurant.id}"
           HUBOT_APP.state = 3
+
       else if HUBOT_APP.state is 3
         # User is deciding on which food to get.
         if HUBOT_APP.users[username]?
           if HUBOT_APP.users[username].state is 1
             if isFinite message
               index = message
-              console.log index
               HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].currentOrders[index])
               HUBOT_APP.users[username].state = 2
               msg.send local.getResponse 'orderSelected',

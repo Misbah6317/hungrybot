@@ -24,7 +24,7 @@ getResponse = (response, params) ->
     noMatches: "There are no more matches for that item. Sorry! Try again."
     finishOrder: "Awesome! Lets place this order. Here is what everyone wants:\n #{params.userString}\nIs this correct? #{params.leader} tell me \"place order\" when you are ready, and \"no\" if you wish to keep ordering."
     exitOrder: "I'm sorry to hear that. Looks like #{params.user} doesn't want to get food with us."
-    restaurantSelected: "Alright lets order from #{params.restaurantName}! Everyone enter the name of the item from the menu that you want. #{params.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
+    restaurantSelected: "Alright lets order from #{params.restaurantName}! #{params.cuisineText} Everyone enter the name of the item from the menu that you want. #{params.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
     orderSelected: "Cool. #{params.username} is getting #{params.selected}. #{params.username}, do you want anything else?"
     joinOrder: "Awesome! #{params.user} is in!"
     orderMore: "Wow #{params.username}, you sure can eat a lot! What do you want?"
