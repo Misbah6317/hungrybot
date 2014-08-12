@@ -74,7 +74,6 @@ getUniqueList = (size, cb) ->
     (err, result) ->
       if err
         console.log err
-        console.log err.stack
         return err
       ordrinApi.delivery_list(
         datetime: 'ASAP'

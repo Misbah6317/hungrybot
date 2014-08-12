@@ -143,7 +143,6 @@ module.exports = (robot) ->
         userString = ''
         _.each HUBOT_APP.users, (user, name) ->
           for order in user.orders
-            console.log name
             userString += "#{name}: #{order.name}\n"
         msg.send local.getResponse 'finishOrder',
           leader: HUBOT_APP.leader
@@ -175,8 +174,6 @@ module.exports = (robot) ->
           msg.send "I didn't get that. Can you try telling me again?"
 
         if restaurant?
-          console.log "FFDSFDFSDFDSFDSFDSFDSFDSFDSFDSFDSFDSFDSFDSFDSFDSFS"
-          console.log restaurant
           cuisineText = "They serve "
 
           if not restaurant.cu?
@@ -190,7 +187,6 @@ module.exports = (robot) ->
             cuisineText += _.reduce(restaurant.cu, (memo, item) -> return memo + ", " + item)
             cuisineText += "."
 
-          console.log cuisineText
           msg.send local.getResponse 'restaurantSelected',
             restaurantName: restaurant.na,
             leader: HUBOT_APP.leader
@@ -342,7 +338,6 @@ module.exports = (robot) ->
       orderDisplay = ''
       for name in _.keys(HUBOT_APP.users)
         user = HUBOT_APP.users[name]
-        console.log user
         for order in user.orders
           orderDisplay += "#{name}: #{order.name} - #{order.price}\n"
       msg.send orderDisplay
