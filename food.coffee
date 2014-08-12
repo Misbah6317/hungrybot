@@ -223,7 +223,6 @@ module.exports = (robot) ->
                 console.log err
                 msg.send "Sorry I can't find anything like that."
                 return err
-              console.log data.length
 
               if data.length > 0
                 console.log data.length
