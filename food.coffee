@@ -19,7 +19,7 @@
 
 _ = require 'underscore'
 orderUtils = require './orderUtils'
-localize = require './localize'
+local = require './local'
 
 module.exports = (robot) ->
 
@@ -44,7 +44,7 @@ module.exports = (robot) ->
       if msg?
         console.log err.stack
         console.log msg
-        msg.send "Something bad happened! #{err}"
+        msg.send local.getResponse('error', err: err)
 
     # Listen for the start of an order.
     startOrder: (msg) ->
@@ -56,23 +56,23 @@ module.exports = (robot) ->
         HUBOT_APP.users[leader] = {}
         HUBOT_APP.users[leader].orders = []
         HUBOT_APP.users[leader].state = 0
-        msg.send "#{HUBOT_APP.leader} is the leader, and has started a group order. Wait while I find some cool nearby restaurants."
+        msg.send local.getResponse('orderStarted', leader: HUBOT_APP.leader)
 
         if msg.match[1].trim() isnt ''
           # A cuisine type or restaurant name was selected.
           HUBOT_APP.keywordString = msg.match[1].trim()
-          orderUtils.getRelevantRestaurants msg.match[1].trim(), "ASAP", address, city, zip, 5, (err, data) ->
+          orderUtils.getRelevantRestaurants msg.match[1].trim(), 5, (err, data) ->
             if err
               msg.send err
               return err
             if data.length is 0
-              msg.send "There were no restaurants that fit that description. Try again."
+              msg.send local.getResponse 'noRestaurants', {}
               return
             HUBOT_APP.restaurants = data
             restaurantsDisplay = ''
             for rest, index in data
               restaurantsDisplay += "(#{index}) #{rest.na}, "
-            msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+            msg.send local.getResponse('chooseRestaurant', restaurantsDisplay: restaurantsDisplay)
             HUBOT_APP.filtered = true
             HUBOT_APP.state = 2
         else
@@ -86,7 +86,7 @@ module.exports = (robot) ->
             for rest, index in data
               restaurantsDisplay += "(#{index}) #{rest.na}, "
             HUBOT_APP.filtered = false
-            msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+            msg.send local.getResponse('chooseRestaurant', restaurantsDisplay: restaurantsDisplay)
             HUBOT_APP.state = 2
 
     # Displays more options for restaurant or item selection.
@@ -94,11 +94,11 @@ module.exports = (robot) ->
       user = msg.message.user.name
       if user is HUBOT_APP.leader and HUBOT_APP.state is 2
         # Listen for the leader to ask for more restaurants.
-        msg.send "Alright let me find more restaurants."
+        msg.send local.getResponse 'findMoreRestaurants', {}
         HUBOT_APP.restaurantLimit += 5
         if HUBOT_APP.filtered
           # A cuisine/restaurant filter was entered.
-          orderUtils.getRelevantRestaurants HUBOT_APP.keywordString, "ASAP", address, city, zip, HUBOT_APP.restaurantLimit, (err, data) ->
+          orderUtils.getRelevantRestaurants HUBOT_APP.keywordString, HUBOT_APP.restaurantLimit, (err, data) ->
             if err
               msg.send err
               return err
@@ -106,7 +106,7 @@ module.exports = (robot) ->
             restaurantsDisplay = ''
             for rest, index in data
               restaurantsDisplay += "(#{index}) #{rest.na}, "
-            msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+            msg.send local.getResponse('chooseRestaurant', restaurantsDisplay: restaurantsDisplay)
             HUBOT_APP.state = 2
         else
           # No cuisine/restaurant filter was entered.
@@ -118,7 +118,7 @@ module.exports = (robot) ->
             restaurantsDisplay = ''
             for rest, index in data
               restaurantsDisplay += "(#{index}) #{rest.na}, "
-            msg.send "Tell me a restaurant to choose from: #{restaurantsDisplay} (say \"more\" to see more restaurants)"
+            msg.send local.getResponse('chooseRestaurant', restaurantsDisplay: restaurantsDisplay)
             HUBOT_APP.state = 2
       else if HUBOT_APP.state is 3
         # A user asked for more item selections.
@@ -128,10 +128,12 @@ module.exports = (robot) ->
           for order, index in HUBOT_APP.users[user].currentOrders[orderLimit + 1..orderLimit + 5]
             if order?
               orderDisplay += "(#{orderLimit + 1 + index}) #{order.name} - $#{order.price}, "
-          msg.send "#{msg.message.user.name} did you mean any of these?: #{orderDisplay} tell me \"no\" if you want something else, and \"more\" to see more options."
+          msg.send local.getResponse 'confirmOrder',
+            user: user,
+            orderDisplay: orderDisplay
           HUBOT_APP.users[user].orderLimit += 5
         else
-          msg.send "There are no more matches for that food item. Sorry! Try again."
+          msg.send local.getResponse 'noMatches', {}
           HUBOT_APP.users[msg.message.user.name].state = 0
 
     # Listen for the leader to say that everyone is in.
@@ -143,7 +145,9 @@ module.exports = (robot) ->
           for order in user.orders
             console.log name
             userString += "#{name}: #{order.name}\n"
-        msg.send "Awesome! Lets place this order. Here is what everyone wants:\n #{userString}\nIs this correct? #{HUBOT_APP.leader} tell me \"place order\" when you are ready, and \"no\" if you wish to keep ordering."
+        msg.send local.getResponse 'finishOrder',
+          leader: HUBOT_APP.leader
+          userString: userString
         HUBOT_APP.state = 4
 
     # Listen for users who want to be removed from the order.
@@ -151,7 +155,7 @@ module.exports = (robot) ->
       user = msg.message.user.name
       if user isnt HUBOT_APP.leader
         HUBOT_APP.users = _.filter HUBOT_APP.users, (userInOrder) -> userInOrder isnt user
-        msg.send "I'm sorry to hear that. Looks like #{user} doesn't want to get food with us."
+        msg.send local.getResponse('exitOrder', user: user)
 
     # Listen for the leader to choose a restaurant, or for a user to select a menu item.
     select: (msg) ->
@@ -165,16 +169,18 @@ module.exports = (robot) ->
         # The leader is choosing a restaurant from the given choices.
         if isFinite message
           restaurant = HUBOT_APP.restaurants[message]
-          msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
+          msg.send local.getResponse 'restaurantSelected',
+            restaurantName: restaurant.na,
+            leader: HUBOT_APP.leader
           HUBOT_APP.rid = "#{restaurant.id}"
           HUBOT_APP.state = 3
         else if msg.match[1] in _.pluck HUBOT_APP.restaurants, 'na'
           restaurant = _.findWhere HUBOT_APP.restaurants, na: msg.match[1]
-          msg.send "Alright lets order from #{restaurant.na}! Everyone enter the name of the item from the menu that you want. #{HUBOT_APP.leader}, tell me when you are done. Tell me \"I'm out\" if you want to cancel your order."
+          msg.send local.getResponse 'restaurantSelected',
+            restaurantName: restaurant.na,
+            leader: HUBOT_APP.leader
           HUBOT_APP.rid = "#{restaurant.id}"
           HUBOT_APP.state = 3
-        else if message isnt "more"
-          msg.send "I didn't get that. Can you try telling me again?"
       else if HUBOT_APP.state is 3
         # User is deciding on which food to get.
         if HUBOT_APP.users[username]?
@@ -184,7 +190,9 @@ module.exports = (robot) ->
               console.log index
               HUBOT_APP.users[username].orders.push(HUBOT_APP.users[username].currentOrders[index])
               HUBOT_APP.users[username].state = 2
-              msg.send "Cool. #{username} is getting #{HUBOT_APP.users[username].currentOrders[index].name}. #{username}, do you want anything else?"
+              msg.send local.getResponse 'orderSelected',
+                username: username,
+                selected: HUBOT_APP.users[username].currentOrders[index].name
 
     # Listen for orders.
     queryMenuItem: (msg) ->
@@ -199,7 +207,7 @@ module.exports = (robot) ->
           HUBOT_APP.users[user] = {}
           HUBOT_APP.users[user].state = 0
           HUBOT_APP.users[user].orders = []
-          msg.send "Awesome! #{user} is in!"
+          msg.send local.getResponse('joinOrder', user: user)
 
         if HUBOT_APP.users[user].state in [0, 1, 2]
           order = escape(msg.match[1])
@@ -208,23 +216,23 @@ module.exports = (robot) ->
             (err, data) ->
               if err
                 console.log err
-                msg.send "Sorry I can't find anything like that."
+                msg.send local.getResponse 'noMatches', {}
                 return err
-              console.log data.length
 
               if data.length > 0
-                console.log data.length
                 orderDisplay = ''
                 for order, index in data
                   orderDisplay += "(#{index}) #{order.name} - $#{order.price}, "
                   if index > 4
                     break
-                msg.send "#{msg.message.user.name} did you mean any of these?: #{orderDisplay} tell me \"no\" if you want something else, and \"more\" to see more options."
+                msg.send local.getResponse 'confirmOrder',
+                  user: user,
+                  orderDisplay: orderDisplay
                 HUBOT_APP.users[msg.message.user.name].currentOrders = data
                 HUBOT_APP.users[msg.message.user.name].state = 1
                 HUBOT_APP.users[msg.message.user.name].orderLimit = 5
               else
-                msg.send "Sorry I can't find anything like that. Try again."
+                msg.send local.getResponse 'noMatches', {}
           )
 
     # Listen for confirmation
@@ -232,7 +240,7 @@ module.exports = (robot) ->
       username = msg.message.user.name
       if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
         # The user wants more food.
-        msg.send "Wow #{username}, you sure can eat a lot! What do you want?"
+        msg.send local.getResponse('orderMore', username: username)
         HUBOT_APP.users[username].state = 0
 
     # Listen for confirmation
@@ -241,14 +249,14 @@ module.exports = (robot) ->
       if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
         # This user is finished ordering.
         HUBOT_APP.users[username].state = 3
-        msg.send "#{username}, hold on while everyone else orders!"
+        msg.send local.getResponse('userIsDone', username: username)
       else if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 1
         # This user does not want any of the suggested items.
-        msg.send "Well, #{username} what DO you want then?"
+        msg.send local.getResponse('userWantsMore', username: username)
         HUBOT_APP.users[username].state = 0
       else if HUBOT_APP.state is 4
         # The order is not finished yet.
-        msg.send "It's all good. I'll keep listening for orders!"
+        msg.send local.getResponse 'keepListeningForOrders', {}
         HUBOT_APP.state = 3
 
     # Everything is finished, and the order can be placed.
@@ -265,15 +273,15 @@ module.exports = (robot) ->
           rid: HUBOT_APP.rid
           tray: tray.substring(1)
 
-        msg.send "Placing order. Please wait for me to confirm that everything was correct."
+        msg.send local.getResponse 'placingOrder', {}
         HUBOT_APP.state = 5
         orderUtils.placeOrder params, (err, data) ->
           if err
             console.log err
-            msg.send "Sorry guys! We messed up: #{err.body._msg}"
+            msg.send local.getResponse('orderError', err: err.body._msg)
             HUBOT_APP.state = 1
             return err
-          msg.send "Order placed: #{data.msg}"
+          msg.send local.getResponse('orderPlaced', msg: data.msg)
           HUBOT_APP.state = 1
 
     # Display orders for each user.
