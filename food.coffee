@@ -91,7 +91,6 @@ module.exports = (robot) ->
 
     # Displays more options for restaurant or item selection.
     more: (msg) ->
-      console.log "moiring"
       user = msg.message.user.name
       if user is HUBOT_APP.leader and HUBOT_APP.state is 2
         # Listen for the leader to ask for more restaurants.
@@ -152,7 +151,6 @@ module.exports = (robot) ->
 
     # Listen for users who want to be removed from the order.
     exitOrder: (msg) ->
-      console.log "exiting"
       user = msg.message.user.name
       if user isnt HUBOT_APP.leader
         HUBOT_APP.users = _.filter HUBOT_APP.users, (userInOrder) -> userInOrder isnt user
@@ -296,7 +294,6 @@ module.exports = (robot) ->
 
     # Listen for confirmation
     decline: (msg) ->
-      console.log "no"
       username = msg.message.user.name
       if HUBOT_APP.state is 3 and HUBOT_APP.users[username].state is 2
         # This user is finished ordering.
