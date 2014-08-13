@@ -25,7 +25,7 @@ placeOrder = (params, cb) ->
   ordrinApi.order_user options, cb
 
 getRelevantMenuItems = (rid, desc, cb) ->
-  request "http://embarrassme.me:8000/TextSearch?rid=#{rid}&target=#{desc}&size=15",
+  request "http://foodbot.ordr.in:8000/TextSearch?rid=#{rid}&target=#{desc}&size=15",
     (err, res, body) ->
       if err
         console.log err
