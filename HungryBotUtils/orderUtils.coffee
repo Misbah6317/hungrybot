@@ -8,9 +8,9 @@ firstName = process.env.HUBOT_ORDRIN_FIRST_NAME
 lastName = process.env.HUBOT_ORDRIN_LAST_NAME
 
 servers =
-  restaurants = "https://foodbot.ordr.in/r"
-  user = "https://foodbot.ordr.in/u"
-  order = "https://foodbot.ordr.in/o"
+  restaurants = "https://foodbot.ordr.in"
+  user = "https://foodbot.ordr.in"
+  order = "https://foodbot.ordr.in"
 
 ordrinApi = new ordrin.APIs servers, ordrin.TEST
 
