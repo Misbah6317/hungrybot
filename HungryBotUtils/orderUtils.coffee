@@ -8,11 +8,11 @@ firstName = process.env.HUBOT_ORDRIN_FIRST_NAME
 lastName = process.env.HUBOT_ORDRIN_LAST_NAME
 
 servers =
-  restaurants = "https://foodbot.ordr.in"
-  user = "https://foodbot.ordr.in"
-  order = "https://foodbot.ordr.in"
+  restaurants: "https://foodbot.ordr.in:443"
+  user: "https://foodbot.ordr.in:443"
+  order: "https://foodbot.ordr.in:443"
 
-ordrinApi = new ordrin.APIs servers, ordrin.TEST
+ordrinApi = new ordrin.APIs ordrin.PRODUCTION
 
 placeOrder = (params, cb) ->
   options =
