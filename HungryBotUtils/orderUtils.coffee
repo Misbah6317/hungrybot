@@ -7,7 +7,7 @@ password = process.env.HUBOT_ORDRIN_PASSWORD
 firstName = process.env.HUBOT_ORDRIN_FIRST_NAME
 lastName = process.env.HUBOT_ORDRIN_LAST_NAME
 
-ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.PRODUCTION
+ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.TEST
 
 placeOrder = (params, cb) ->
   options =

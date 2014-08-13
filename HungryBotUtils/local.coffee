@@ -1,14 +1,14 @@
 # An object mapping function names to ther listener regular expressions.
 listeners =
-  startOrder: [/start order(.*)$/i]
-  more: [/more$/i]
-  finishOrder: [/done$/i]
-  exitOrder: [/I'm out$/i]
+  startOrder: [/start order(.*)$/i, /let's order food from(.*)/i, /let's get (.*) food/i, /let's order (.*) food/i]
+  more: [/\bmore\b/i]
+  finishOrder: [/(.*)\bdone\b(.*)/i]
+  exitOrder: [/I'm out$/i, /quit$/i, /bye$/i]
   select: [/(.*)/i]
-  queryMenuItem: [/I want (.*)/i]
+  queryMenuItem: [/I want (.*)/i, /give me (.*)/i]
   randomItem: [/suggest something/i]
-  confirm: [/yes/i]
-  decline: [/no/i]
+  confirm: [/(.*)\byes\b(.*)/i, /sure$/i, /yea$/i, /yep$/i]
+  decline: [/(.*)\bno\b(.*)/i]
   placeOrder: [/place order/i]
   displayOrders: [/show orders$/i]
 
