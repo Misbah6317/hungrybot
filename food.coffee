@@ -18,8 +18,8 @@
 #   ordrin
 
 _ = require 'underscore'
-orderUtils = require './orderUtils'
-local = require './local'
+orderUtils = require '../hungrybot/HungryBotUtils/orderUtils'
+local = require '../hungrybot/HungryBotUtils/local'
 
 module.exports = (robot) ->
 
