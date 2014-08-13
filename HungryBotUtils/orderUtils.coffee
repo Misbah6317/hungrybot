@@ -7,7 +7,12 @@ password = process.env.HUBOT_ORDRIN_PASSWORD
 firstName = process.env.HUBOT_ORDRIN_FIRST_NAME
 lastName = process.env.HUBOT_ORDRIN_LAST_NAME
 
-ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.TEST
+servers =
+  restaurants = "https://foodbot.ordr.in/r"
+  user = "https://foodbot.ordr.in/u"
+  order = "https://foodbot.ordr.in/o"
+
+ordrinApi = new ordrin.APIs servers, ordrin.TEST
 
 placeOrder = (params, cb) ->
   options =
