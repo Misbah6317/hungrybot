@@ -2,7 +2,7 @@ prompt = require 'prompt'
 async = require 'async'
 ordrin = require 'ordrin-api'
 
-ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.TEST
+ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.PRODUCTION
 
 prompt.start()
 async.waterfall [
@@ -16,6 +16,8 @@ async.waterfall [
         first_name: result.firstName
         last_name: result.lastName,
         (err, data) ->
+          if err
+            return asyncCb err
           console.log "User #{result.email} created"
           asyncCb(null, result);
       )
@@ -32,7 +34,7 @@ async.waterfall [
         phone: result.phone,
         (err, data) ->
           if err
-            asyncCb err
+            return asyncCb err
           console.log 'Address created'
           asyncCb(null, createAccount, result);
       )
@@ -52,7 +54,7 @@ async.waterfall [
         bill_phone: result.billingPhoneNumber,
         (err, data) ->
           if err
-            asyncCb err
+            return asyncCb err
           console.log 'Credit card created'
           asyncCb()
       )
