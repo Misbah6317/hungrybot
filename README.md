@@ -13,15 +13,15 @@ A hubot plugin for chat based, group food ordering. Now your team can order food
 
 2. Clone this repository in your Hubot's root directory.
 
-    git clone https://github.com/ordrin/hungrybot.git
+        git clone https://github.com/ordrin/hungrybot.git
 
 3. Add food.coffee to your Hubot scripts/ directory.
 
-    cp hungrybot/food.coffee scripts/food.coffee
+        cp hungrybot/food.coffee scripts/food.coffee
 
 4. Now Hubot will recognize the foodbot plugin, but more setup is required. Run the setup.coffee script in order to create an account with Ordr.in. This is where you will keep your credit card and address information that will be used for group orders. You should have coffeescript installed already because it is required for Hubot to run.
 
-    coffee setup.coffee
+        coffee setup.coffee
 
 5. We are almost done! Now that you have created an Ordrin account, you must set some environment variables. If you are using Heroku you can figure out how to do this [here](https://devcenter.heroku.com/articles/config-vars). Set the following variables:
 
