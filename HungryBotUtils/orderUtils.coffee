@@ -56,7 +56,6 @@ getRelevantRestaurants = (name, limit, cb) ->
         (err, restaurants) ->
           if err
             console.log err
-            console.log "rests", restaurants
             return cb err
           name = name.toLowerCase()
 
@@ -73,14 +72,11 @@ getRelevantRestaurants = (name, limit, cb) ->
       )
 
 getUniqueList = (size, cb) ->
-  console.log "testing"
   ordrinApi.get_saved_addr
     email: email
     current_password: password
     nick: 'groupLocation',
     (err, result) ->
-      console.log err
-      console.log result
       if err
         console.log err
         return err
