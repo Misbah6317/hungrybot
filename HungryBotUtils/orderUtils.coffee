@@ -8,11 +8,11 @@ firstName = process.env.HUBOT_ORDRIN_FIRST_NAME
 lastName = process.env.HUBOT_ORDRIN_LAST_NAME
 
 servers =
-  restaurants: "https://foodbot.ordr.in:443"
-  user: "https://foodbot.ordr.in:443"
-  order: "https://foodbot.ordr.in:443"
+  restaurant: "https://foodbot.ordr.in:7000"
+  user: "https://foodbot.ordr.in:7000"
+  order: "https://foodbot.ordr.in:7000"
 
-ordrinApi = new ordrin.APIs ordrin.PRODUCTION
+ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, servers
 
 placeOrder = (params, cb) ->
   options =
@@ -51,11 +51,12 @@ getRelevantRestaurants = (name, limit, cb) ->
         datetime: 'ASAP'
         addr: result.addr
         city: result.city
-        zip: result.zip,
+        zip:  result.zip,
 
         (err, restaurants) ->
           if err
             console.log err
+            console.log "rests", restaurants
             return cb err
           name = name.toLowerCase()
 
@@ -72,11 +73,14 @@ getRelevantRestaurants = (name, limit, cb) ->
       )
 
 getUniqueList = (size, cb) ->
+  console.log "testing"
   ordrinApi.get_saved_addr
     email: email
     current_password: password
     nick: 'groupLocation',
     (err, result) ->
+      console.log err
+      console.log result
       if err
         console.log err
         return err
