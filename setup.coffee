@@ -16,9 +16,7 @@ servers.PRODUCTION =
 
 ordrinApi = new ordrin.APIs "0000000000000000000", servers.TEST
 
-prompt.start()
-async.waterfall [
-  (asyncCb) ->
+createOrdrinAccount = (asyncCb) ->
     prompt.get ['email', 'password', 'firstName', 'lastName'], (err, result) ->
       if err
         asyncCb err
@@ -29,11 +27,13 @@ async.waterfall [
         last_name: result.lastName,
         (err, data) ->
           if err
-            return asyncCb err
+            console.log "Sorry there was a problem with the data you entered. Try again."
+            return createOrdrinAccount(asyncCb)
           console.log "User #{result.email} created"
           asyncCb(null, result);
       )
-  (createAccount, asyncCb) ->
+
+createOrdrinAddress = (createAccount, asyncCb) ->
     prompt.get ['address', 'city', 'state', 'zip', 'phone'], (err, result) ->
       ordrinApi.create_addr(
         email: createAccount.email
@@ -46,11 +46,13 @@ async.waterfall [
         phone: result.phone,
         (err, data) ->
           if err
-            return asyncCb err
+            console.log "Sorry there was a problem with the data you entered. Try again."
+            return createOrdrinAddress(createAccount, asyncCb)
           console.log 'Address created'
           asyncCb(null, createAccount, result);
       )
-  (createAccount, createAddress, asyncCb) ->
+
+createCC = (createAccount, createAddress, asyncCb) ->
     prompt.get ['cardNumber', 'cardCvc', 'cardExpirationDate', 'billingAddress', 'billingCity', 'billingState', 'billingZipCode', 'billingPhoneNumber'], (err, result) ->
       ordrinApi.create_cc(
         email: createAccount.email
@@ -66,11 +68,14 @@ async.waterfall [
         bill_phone: result.billingPhoneNumber,
         (err, data) ->
           if err
-            return asyncCb err
+            console.log "Sorry there was a problem with the data you entered. Try again."
+            return createCC(createAccount, createAddress, asyncCb)
           console.log 'Credit card created'
           asyncCb()
       )
-], (err, result) ->
+
+prompt.start()
+async.waterfall [createOrdrinAccount, createOrdrinAddress, createCC], (err, result) ->
   if err
     console.log "An error has occured"
     console.log err
