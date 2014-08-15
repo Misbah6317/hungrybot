@@ -5,6 +5,7 @@ listeners =
   finishOrder: [/(.*)\bdone\b(.*)/i]
   exitOrder: [/I'm out$/i, /quit$/i, /bye$/i]
   select: [/(.*)/i]
+  tip: [/(([1-9]\d{0,2}(,\d{3})*)|(([1-9]\d*)?\d))(\.\d\d)/i]
   queryMenuItem: [/I want (.*)/i, /give me (.*)/i]
   randomItem: [/suggest something/i]
   confirm: [/(.*)\byes\b(.*)/i, /sure$/i, /yea$/i, /yep$/i]
