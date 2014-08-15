@@ -18,8 +18,8 @@
 #   ordrin
 
 _ = require 'underscore'
-orderUtils = require './HungryBotUtils/orderUtils'
-local = require './HungryBotUtils/local'
+orderUtils = require '../hungrybot/HungryBotUtils/orderUtils'
+local = require '../hungrybot/HungryBotUtils/local'
 
 module.exports = (robot) ->
 
@@ -312,7 +312,7 @@ module.exports = (robot) ->
     placeOrder: (msg) ->
       username = msg.message.user.name
       if HUBOT_APP.state is 4 and username is HUBOT_APP.leader
-        msg.send "How much would you like to tip?"
+        msg.send "How much would you like to tip? Please enter in the formate X.XX"
         HUBOT_APP.state = 6
 
     # Everything is finished, and the order can be placed.

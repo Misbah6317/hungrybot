@@ -2,7 +2,19 @@ prompt = require 'prompt'
 async = require 'async'
 ordrin = require 'ordrin-api'
 
-ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, ordrin.PRODUCTION
+servers = {}
+
+servers.TEST =
+  restaurant: "https://foodbot.ordr.in:7000"
+  user: "https://foodbot.ordr.in:7000"
+  order: "https://foodbot.ordr.in:7000"
+
+servers.PRODUCTION =
+  restaurant: "https://foodbot.ordr.in"
+  user: "https://foodbot.ordr.in"
+  order: "https://foodbot.ordr.in"
+
+ordrinApi = new ordrin.APIs "0000000000000000000", servers.TEST
 
 prompt.start()
 async.waterfall [
