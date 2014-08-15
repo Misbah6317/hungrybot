@@ -70,13 +70,13 @@ Whoever starts the order is designated the "leader" and will be the main person 
 Now that you have started an order, you will be presented with a list of possible restaurants to choose from. The group can discuss which restaurant to pick, and the leader tells the bot by either saying the number corresponding to the restaurant, or the full name of the restaurant.
 
 ```
-Foodbot: sagnew is the leader, and has started a group order. Wait while I find some cool nearby restaurants.
+foodbot: sagnew is the leader, and has started a group order. Wait while I find some cool nearby restaurants.
 
 foodbot: Tell me a restaurant to choose from: (0) Bangkok 2 Thai, (1) ABE Potluck Asian, (2) Little Basil, (3) Erawan, (4) Thai Palace, (5) East Pacific,  (say "more" to see more restaurants)
 
 sagnew: foodbot 2
 
-Alright lets order from Little Basil! They serve Thai, Vegetarian, and Fusion. Everyone enter the name of the item from the menu that you want. sagnew, tell me when you are done. Tell me "I'm out" if you want to cancel your order.
+foodbot: Alright lets order from Little Basil! They serve Thai, Vegetarian, and Fusion. Everyone enter the name of the item from the menu that you want. sagnew, tell me when you are done. Tell me "I'm out" if you want to cancel your order.
 ```
 
 You are now ordering from the restaurant of your choice!
@@ -131,3 +131,24 @@ foodbot: Order placed: Success
 ```
 
 Now your food is on its way! (Assuming you entered all of the correct delivery information that is!) If there were any problems, the bot will return an error message.
+
+### Miscellaneous
+
+Any user may exit the order at any time by responding to the bot saying "I'm out"
+This will delete any items added to the order from that user.
+
+```
+user: foodbot I'm out
+
+foodbot: I'm sorry to hear that. Looks like user won't be joining us.
+```
+
+You may also ask to see what everyone is currently ordering at any given time by asking the bot like this:
+
+```
+sagnew: foodbot show orders
+
+foodbot:
+  sagnew: Pineapple Fried Rice with Chicken and Tom Yum Chicken
+  ericsong: Pad Thai with Chicken
+```
