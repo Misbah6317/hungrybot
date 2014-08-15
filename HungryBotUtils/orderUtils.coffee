@@ -7,12 +7,19 @@ password = process.env.HUBOT_ORDRIN_PASSWORD
 firstName = process.env.HUBOT_ORDRIN_FIRST_NAME
 lastName = process.env.HUBOT_ORDRIN_LAST_NAME
 
-servers =
+servers = {}
+
+servers.TEST =
+  restaurant: "https://foodbot.ordr.in:7000"
+  user: "https://foodbot.ordr.in:7000"
+  order: "https://foodbot.ordr.in:7000"
+
+servers.PRODUCTION =
   restaurant: "https://foodbot.ordr.in"
   user: "https://foodbot.ordr.in"
   order: "https://foodbot.ordr.in"
 
-ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, servers
+ordrinApi = new ordrin.APIs process.env.HUBOT_ORDRIN_API_KEY, servers.TEST
 
 placeOrder = (params, cb) ->
   options =
@@ -20,7 +27,7 @@ placeOrder = (params, cb) ->
     'email': email
     'current_password': password
     'tray': params.tray
-    'tip': '10.00'
+    'tip': params.tip
     'first_name': firstName
     'last_name': lastName
     'delivery_date': 'ASAP'
