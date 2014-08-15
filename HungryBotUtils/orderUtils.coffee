@@ -10,12 +10,12 @@ lastName = process.env.HUBOT_ORDRIN_LAST_NAME
 servers = {}
 
 servers.TEST =
-  restaurant: "https://foodbot.ordr.in:7000"
+  restaurants: "https://foodbot.ordr.in:7000"
   user: "https://foodbot.ordr.in:7000"
   order: "https://foodbot.ordr.in:7000"
 
 servers.PRODUCTION =
-  restaurant: "https://foodbot.ordr.in"
+  restaurants: "https://foodbot.ordr.in"
   user: "https://foodbot.ordr.in"
   order: "https://foodbot.ordr.in"
 
