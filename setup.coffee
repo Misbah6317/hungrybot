@@ -17,7 +17,7 @@ servers.PRODUCTION =
 ordrinApi = new ordrin.APIs "0000000000000000000", servers.TEST
 
 createOrdrinAccount = (asyncCb) ->
-    prompt.get ['email', 'password', 'firstName', 'lastName'], (err, result) ->
+    prompt.get ['email', {name:'password', hidden:true}, 'firstName', 'lastName'], (err, result) ->
       if err
         asyncCb err
       ordrinApi.create_account(
@@ -53,7 +53,7 @@ createOrdrinAddress = (createAccount, asyncCb) ->
       )
 
 createCC = (createAccount, createAddress, asyncCb) ->
-    prompt.get ['cardNumber', 'cardCvc', 'cardExpirationDate', 'billingAddress', 'billingCity', 'billingState', 'billingZipCode', 'billingPhoneNumber'], (err, result) ->
+    prompt.get ['cardNumber', 'cardCvc', 'cardExpirationDate (MM/YYYY)', 'billingAddress', 'billingCity', 'billingState', 'billingZipCode', 'billingPhoneNumber'], (err, result) ->
       ordrinApi.create_cc(
         email: createAccount.email
         current_password: createAccount.password
