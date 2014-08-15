@@ -19,7 +19,7 @@ servers.PRODUCTION =
   user: "https://foodbot.ordr.in"
   order: "https://foodbot.ordr.in"
 
-ordrinApi = new ordrin.APIs "0000000000000000000", servers.TEST
+ordrinApi = new ordrin.APIs "0000000000000000000", servers.PRODUCTION
 
 placeOrder = (params, cb) ->
   options =
