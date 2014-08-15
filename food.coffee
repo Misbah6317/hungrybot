@@ -308,10 +308,19 @@ module.exports = (robot) ->
         msg.send local.getResponse 'keepListeningForOrders', {}
         HUBOT_APP.state = 3
 
-    # Everything is finished, and the order can be placed.
+    # Ask for tip
     placeOrder: (msg) ->
       username = msg.message.user.name
       if HUBOT_APP.state is 4 and username is HUBOT_APP.leader
+        msg.send "How much would you like to tip?"
+        HUBOT_APP.state = 6
+
+    # Everything is finished, and the order can be placed.
+    tip: (msg) ->
+      username = msg.message.user.name
+      if HUBOT_APP.state is 6 and username is HUBOT_APP.leader
+        tip = msg.match[0].substring(msg.robot.name.length).trim()
+
         # confirm and place order
         tray = ''
         _.each HUBOT_APP.users, (user) ->
@@ -321,6 +330,7 @@ module.exports = (robot) ->
         params =
           rid: HUBOT_APP.rid
           tray: tray.substring(1)
+          tip: tip
 
         msg.send local.getResponse 'placingOrder', {}
         HUBOT_APP.state = 5
