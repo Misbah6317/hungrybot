@@ -110,7 +110,7 @@ module.exports = (robot) ->
             HUBOT_APP.state = 2
         else
           # No cuisine/restaurant filter was entered.
-          orderUtils.getUniqueList "ASAP", address, city, zip, HUBOT_APP.restaurantLimit, (err, data) ->
+          orderUtils.getUniqueList HUBOT_APP.restaurantLimit, (err, data) ->
             if err
               msg.send err
               return err
