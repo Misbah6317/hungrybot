@@ -28,6 +28,7 @@ createOrdrinAccount = (asyncCb) ->
         (err, data) ->
           if err
             console.log "Sorry there was a problem with the data you entered. Try again."
+            console.log err
             return createOrdrinAccount(asyncCb)
           console.log "User #{result.email} created"
           asyncCb(null, result);
@@ -47,6 +48,7 @@ createOrdrinAddress = (createAccount, asyncCb) ->
         (err, data) ->
           if err
             console.log "Sorry there was a problem with the data you entered. Try again."
+            console.log err
             return createOrdrinAddress(createAccount, asyncCb)
           console.log 'Address created'
           asyncCb(null, createAccount, result);
@@ -60,7 +62,7 @@ createCC = (createAccount, createAddress, asyncCb) ->
         nick: 'groupCard'
         card_number: result.cardNumber
         card_cvc: result.cardCvc
-        card_expiry: result.cardExpirationDate
+        card_expiry: result['cardExpirationDate (MM/YYYY)']
         bill_addr: result.billingAddress
         bill_city: result.billingCity
         bill_state: result.billingState
@@ -69,6 +71,7 @@ createCC = (createAccount, createAddress, asyncCb) ->
         (err, data) ->
           if err
             console.log "Sorry there was a problem with the data you entered. Try again."
+            console.log err
             return createCC(createAccount, createAddress, asyncCb)
           console.log 'Credit card created'
           asyncCb()
